@@ -1,0 +1,1981 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>근무·수당 관리</title>
+<style>:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#1d2433; --ink2:#4a5468; --ink3:#7b8497; --line:#e2e5eb; --line2:#cfd4dd;
+  --pri:#1f3a5f; --pri2:#2c5282; --pri-soft:#e8eef6; --acc:#0f766e; --acc-soft:#e3f3f1;
+  --red:#c0392b; --red-soft:#fdecea; --org:#b45309; --org-soft:#fff4e0; --blue:#1d4ed8; --blue-soft:#e6eefc; --sat:#1f4e99;
+  --r:8px; --sh:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:linear-gradient(to right,var(--pri) 208px,var(--bg) 208px);font-family:"Pretendard","Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",system-ui,sans-serif;font-size:14px;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:208px 1fr;min-height:100vh}
+.side{background:var(--pri);color:#dfe7f2;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.brand b{display:block;font-size:15px;color:#fff;letter-spacing:-.2px}
+.brand span{font-size:12px;color:#9fb2cc}
+.nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:6px;font-size:14px;display:flex;align-items:center;gap:10px;color:#c9d5e6}
+.nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav button.on{background:#fff;color:var(--pri);font-weight:700}
+.nav .ic{width:18px;text-align:center;opacity:.9}
+.side .foot{margin-top:auto;padding:14px 16px;font-size:12px;color:#9fb2cc;border-top:1px solid rgba(255,255,255,.1);line-height:1.6}
+.main{min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.month{display:flex;align-items:center;gap:4px}
+.month b{font-size:18px;min-width:118px;text-align:center;letter-spacing:-.3px}
+.iconbtn{all:unset;cursor:pointer;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--ink2);border:1px solid var(--line)}
+.iconbtn:hover{background:var(--bg)}
+.top .sp{flex:1}
+.saved{font-size:12px;color:var(--ink3)}
+.btn{cursor:pointer;border:1px solid var(--line2);background:#fff;padding:7px 14px;border-radius:6px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--bg)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{background:var(--pri2)}
+.btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2)}
+.btn.ghost:hover{background:var(--bg)}
+.btn.danger{color:var(--red)}
+.content{padding:22px 24px 60px;max-width:1500px}
+h2{font-size:19px;margin:0 0 4px;letter-spacing:-.4px}
+.sub{color:var(--ink3);font-size:13px;margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px;margin-bottom:16px}
+.card h3{font-size:15px;margin:0 0 12px;letter-spacing:-.2px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:120px}
+.fld label{font-size:12px;color:var(--ink2);font-weight:600}
+.fld input,.fld select,.fld textarea{border:1px solid var(--line2);border-radius:6px;padding:7px 9px;background:#fff;min-height:35px}
+.fld input:focus,.fld select:focus{outline:2px solid #bcd0ea;border-color:var(--pri2)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:7px 12px;font-size:13px;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--pri);color:#fff;font-weight:600}
+.hint{font-size:12px;color:var(--ink3)}
+.preview{margin-top:12px;padding:11px 13px;border-radius:6px;background:var(--pri-soft);font-size:13px;line-height:1.7}
+.preview.warn{background:var(--org-soft);color:#7c4a03}
+.preview.err{background:var(--red-soft);color:#8a1f12}
+.chipbtn{all:unset;cursor:pointer;display:inline-block;padding:2px 9px;margin:2px 4px 2px 0;border-radius:99px;border:1px solid #b7c7de;background:#fff;font-size:12px}
+.chipbtn:hover{background:var(--pri);color:#fff}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{background:#f7f8fa;color:var(--ink2);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:58px}
+table.t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.t tr:hover td{background:#fafbfc}
+table.t td.num,table.t th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.t td.c,table.t th.c{text-align:center}
+table.t tr.total td{font-weight:700;background:#f7f8fa}
+table.t tr.sel td{background:var(--pri-soft)}
+.tag{display:inline-block;white-space:nowrap;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;background:#eef0f3;color:var(--ink2)}
+.tag.j{background:#e8eef6;color:var(--pri)} .tag.g{background:var(--acc-soft);color:var(--acc)}
+.tag.k-연가{background:#e6f0ff;color:#1d4ed8}.tag.k-특별휴가{background:#f3e8ff;color:#7e22ce}.tag.k-병가{background:#fdecea;color:#b42318}.tag.k-공가{background:#e3f3f1;color:#0f766e}
+.empty{padding:28px;text-align:center;color:var(--ink3)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi span{font-size:12px;color:var(--ink3)} .kpi b{display:block;font-size:22px;margin-top:4px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.alert{border:1px solid #f3d19c;background:var(--org-soft);color:#7c4a03;border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-size:13px;line-height:1.7}
+.alert b{color:#5c3700}
+/* 달력 */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid var(--line);border-top:1px solid var(--line);background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.cal .dh{padding:8px;text-align:center;font-size:12px;font-weight:700;color:var(--ink2);background:#f7f8fa;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cal .dh.sun{color:var(--red)} .cal .dh.sat{color:var(--sat)}
+.cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 7px 8px;min-height:150px;font-size:12px;position:relative}
+.cell.out{background:#fafafa}
+.cell.out .ln{opacity:.55}
+.cell.hol{background:#fffafa}
+.cell .dn{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.cell .dn b{font-size:14px}
+.cell .dn.sun b,.cell .dn.hol b{color:var(--red)} .cell .dn.sat b{color:var(--sat)}
+.cell .dn em{font-style:normal;font-size:11px;color:var(--red);font-weight:600}
+.cell .dn .add{margin-left:auto;all:unset;cursor:pointer;color:var(--ink3);font-size:15px;line-height:1;padding:0 3px;border-radius:4px}
+.cell .dn .add:hover{background:var(--bg);color:var(--pri)}
+.ln{display:flex;gap:4px;align-items:flex-start;margin:2px 0;line-height:1.35}
+.ln .k{flex:0 0 26px;color:var(--ink3);font-size:11px;padding-top:2px}
+.ln .k.j{color:var(--pri);font-weight:700}
+.ln .v{display:flex;flex-wrap:wrap;gap:2px}
+.nm{all:unset;cursor:pointer;padding:1px 6px;border-radius:4px;background:#f0f2f5;font-size:12px;white-space:nowrap}
+.nm:hover{outline:1px solid var(--pri2)}
+.nm.chg{background:var(--blue-soft);color:var(--blue);font-weight:600}
+.nm.lv{background:var(--red-soft);color:var(--red);text-decoration:line-through}
+.nm.pl{background:var(--org-soft);color:var(--org)}
+.sep{height:1px;background:var(--line);margin:4px 0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:0 0 12px}
+.legend .nm{cursor:default}
+.pop{position:fixed;z-index:50;background:#fff;border:1px solid var(--line2);border-radius:8px;box-shadow:0 10px 30px rgba(16,24,40,.18);padding:12px;width:250px;font-size:13px}
+.pop h4{margin:0 0 2px;font-size:14px} .pop p{margin:0 0 10px;color:var(--ink3);font-size:12px}
+.pop .btn{width:100%;justify-content:flex-start;margin-top:6px}
+/* 출력 미리보기 */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+.tabs button{all:unset;cursor:pointer;padding:9px 14px;font-size:13.5px;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--pri);border-color:var(--pri);font-weight:700}
+.paper{background:#fff;border:1px solid var(--line);box-shadow:var(--sh);padding:26px;overflow:auto}
+table.x{border-collapse:collapse;font-size:12.5px;margin:0 auto;font-family:"Malgun Gothic","맑은 고딕",sans-serif}
+table.x td{padding:3px 5px;white-space:pre-wrap;line-height:1.35}
+table.x td.b{border:1px solid #333}
+table.x td.hd{background:#eef1f5;font-weight:700}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.drawer{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto}
+.mini{width:100%;border-collapse:collapse;font-size:12px}
+.mini th,.mini td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
+.mini th:first-child,.mini td:first-child{text-align:left}
+.mini th{color:var(--ink3);font-weight:600}
+.edit input,.edit select{border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:4px;width:100%;min-width:60px}
+.edit input:hover,.edit select:hover{border-color:var(--line2)}
+.edit input:focus,.edit select:focus{border-color:var(--pri2);background:#fff;outline:none}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:1100px){.split{grid-template-columns:1fr}.drawer{position:static;max-height:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff!important}
+  .side,.top,.noprint,.tabs,.sub,h2{display:none!important}
+  .app{display:block}.content{padding:0}
+  .paper{border:0;box-shadow:none;padding:0;overflow:visible}
+  table.x{font-size:11px}
+}
+.edit input[type=number]{min-width:84px}
+table.t td:first-child{white-space:nowrap}
+
+table.t.inbox th{top:0;z-index:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>근무·수당 관리</b><span>동해시 안전정보센터</span></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">혼자 쓸 때는 인터넷 없이 동작합니다.<br>인터넷(Firebase)에 연결하면 여러 자리에서 함께 씁니다.</div>
+  </aside>
+  <main class="main">
+    <header class="top">
+      <div class="month"><button class="iconbtn" data-mv="-1" title="이전 달">◀</button><b id="mlabel"></b><button class="iconbtn" data-mv="1" title="다음 달">▶</button></div>
+      <span class="sp"></span>
+      <span class="saved" id="saved"></span>
+      <span id="acct"></span>
+      <button class="btn" data-nav="result">₩ 수당 결과</button>
+      <button class="btn pri" data-act="xlsx">⬇ 엑셀 내보내기</button>
+    </header>
+    <section class="content" id="content"></section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>/* ===== 계산 엔진 (화면과 분리: Node에서 단독 검증 가능) ===== */
+(function (G) {
+  'use strict';
+  const DAY = 1440;
+  const KINDS = ['연가', '특별휴가', '병가', '공가'];
+  const SHIFTS = {
+    '주간': { role: '조장', s: 8 * 60, e: 20 * 60 },
+    '야간': { role: '조장', s: 20 * 60, e: 32 * 60 },
+    '새벽': { role: '관제', s: 0, e: 8 * 60 },
+    '오전': { role: '관제', s: 8 * 60, e: 16 * 60 },
+    '오후': { role: '관제', s: 16 * 60, e: 24 * 60 }
+  };
+  const SHIFT_ORDER = ['주간', '야간', '새벽', '오전', '오후'];
+  // 순환 패턴 (엑셀 근무순환 탭과 동일)
+  const PATTERN = {
+    '주간': { len: 4, teams: [1, 4, 2, 3], off: 0 },
+    '야간': { len: 4, teams: [1, 4, 2, 3], off: 3 },
+    '새벽': { len: 8, teams: [1, 4, 4, 3, 3, 2, 2, 1], off: 0 },
+    '오전': { len: 8, teams: [2, 2, 1, 1, 4, 4, 3, 3], off: 0 },
+    '오후': { len: 8, teams: [3, 3, 2, 2, 1, 1, 4, 4], off: 0 }
+  };
+
+  // ---- 날짜 유틸 (UTC 일련번호 사용: 시간대 영향 없음) ----
+  function dn(str) { // 'YYYY-MM-DD' -> day number
+    const [y, m, d] = str.slice(0, 10).split('-').map(Number);
+    return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+  }
+  function ds(n) { const d = new Date(n * 86400000); return d.toISOString().slice(0, 10); }
+  function dow(n) { return new Date(n * 86400000).getUTCDay(); } // 0=일
+  function mins(str) { // 'YYYY-MM-DDTHH:MM' -> 절대 분
+    const n = dn(str); const t = str.length > 10 ? str.slice(11, 16) : '00:00';
+    const [h, mi] = t.split(':').map(Number);
+    return n * DAY + h * 60 + mi;
+  }
+  function fmtMins(m) { const n = Math.floor(m / DAY), r = m - n * DAY; return ds(n) + 'T' + String(Math.floor(r / 60)).padStart(2, '0') + ':' + String(r % 60).padStart(2, '0'); }
+  function ymDays(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+  const DOW_KO = ['일', '월', '화', '수', '목', '금', '토'];
+
+  function overlap(a1, a2, b1, b2) { return Math.max(0, Math.min(a2, b2) - Math.max(a1, b1)); }
+  // 구간 리스트에서 다른 구간들을 뺀 결과
+  function subtract(base, cuts) {
+    let res = [base];
+    for (const c of cuts) {
+      const next = [];
+      for (const r of res) {
+        if (c[1] <= r[0] || c[0] >= r[1]) { next.push(r); continue; }
+        if (c[0] > r[0]) next.push([r[0], c[0]]);
+        if (c[1] < r[1]) next.push([c[1], r[1]]);
+      }
+      res = next;
+    }
+    return res;
+  }
+  function nightOf(iv) { // 22:00~06:00 구간과 겹치는 분
+    let t = 0;
+    const d0 = Math.floor(iv[0] / DAY) - 1, d1 = Math.floor(iv[1] / DAY) + 1;
+    for (let d = d0; d <= d1; d++) t += overlap(iv[0], iv[1], d * DAY + 22 * 60, d * DAY + 30 * 60);
+    return t;
+  }
+
+  function activeOn(p, n) {
+    if (p.start && n < dn(p.start)) return false;
+    if (p.end && n > dn(p.end)) return false;
+    return true;
+  }
+
+  // ---- 기본 근무표(순환) ----
+  function baseShift(state, n, kind) {
+    const base = dn(state.settings.baseDate || '2026-05-01');
+    const pt = PATTERN[kind];
+    const idx = (((n - base + pt.off) % pt.len) + pt.len) % pt.len;
+    const team = pt.teams[idx];
+    const role = SHIFTS[kind].role;
+    return state.people.filter(p => p.role === role && Number(p.team) === team && activeOn(p, n)).map(p => p.id);
+  }
+
+  // ---- 근무변경 적용 ----
+  function actualShift(state, n, kind, ctx) {
+    const list = baseShift(state, n, kind).slice();
+    const date = ds(n);
+    const chs = state.changes.filter(c => c.date === date && c.shift === kind);
+    for (const c of chs) {
+      const fi = c.fromId ? list.indexOf(c.fromId) : -1;
+      if (c.fromId && fi < 0 && ctx) ctx.warn.push({ type: 'change', id: c.id, msg: `${date} ${kind}: 변경 전 근무자(${nameOf(state, c.fromId)})가 원래 근무에 없습니다. 변경 후 근무자를 추가로 처리했습니다.` });
+      if (fi >= 0) list.splice(fi, 1);
+      if (c.toId && list.indexOf(c.toId) < 0) list.splice(fi >= 0 ? fi : list.length, 0, c.toId);
+    }
+    return list;
+  }
+  function nameOf(state, id) { const p = state.people.find(x => x.id === id); return p ? p.name : '(삭제된 인원)'; }
+
+  function shiftInterval(n, kind) { return [n * DAY + SHIFTS[kind].s, n * DAY + SHIFTS[kind].e]; }
+
+  // 휴가가 덮는 구간(해당 근무 기준)
+  function leaveCuts(state, pid, n, kind) {
+    const [s, e] = shiftInterval(n, kind);
+    const cuts = [];
+    for (const l of state.leaves) {
+      if (l.pid !== pid) continue;
+      if (l.mode === 'day') {
+        if (n >= dn(l.from) && n <= dn(l.to)) cuts.push([s, e]);
+      } else {
+        const a = mins(l.start), b = mins(l.end);
+        if (b > s && a < e) cuts.push([a, b]);
+      }
+    }
+    return cuts;
+  }
+
+  // 휴가 1건의 차감시간(원래 근무표 기준, 없으면 실제 근무표 기준)
+  function leaveHours(state, l, rangeFrom, rangeTo) {
+    if (l.hours !== null && l.hours !== undefined && l.hours !== '' && rangeFrom === undefined) return Number(l.hours);
+    let s, e;
+    if (l.mode === 'day') { s = dn(l.from) - 1; e = dn(l.to) + 1; } else { s = Math.floor(mins(l.start) / DAY) - 1; e = Math.floor(mins(l.end) / DAY) + 1; }
+    const p = state.people.find(x => x.id === l.pid); if (!p) return 0;
+    const kinds = SHIFT_ORDER.filter(k => SHIFTS[k].role === p.role);
+    const calc = (useActual) => {
+      let t = 0;
+      for (let n = s; n <= e; n++) {
+        if (rangeFrom !== undefined && (n < rangeFrom || n > rangeTo)) continue;
+        for (const k of kinds) {
+          const mem = useActual ? actualShift(state, n, k) : baseShift(state, n, k);
+          if (mem.indexOf(l.pid) < 0) continue;
+          const [a, b] = shiftInterval(n, k);
+          if (l.mode === 'day') { if (n >= dn(l.from) && n <= dn(l.to)) t += b - a; }
+          else t += overlap(a, b, mins(l.start), mins(l.end));
+        }
+      }
+      return t / 60;
+    };
+    let h = calc(false);
+    if (h === 0) h = calc(true);
+    if (rangeFrom !== undefined && l.hours !== null && l.hours !== undefined && l.hours !== '') {
+      // 수동 입력 시간이 있으면 월 비율로 배분
+      const all = leaveHours(Object.assign({}, state), Object.assign({}, l, { hours: null }));
+      return all > 0 ? Number(l.hours) * h / all : (rangeFrom <= dnStart(l) && dnStart(l) <= rangeTo ? Number(l.hours) : 0);
+    }
+    return h;
+  }
+  function dnStart(l) { return l.mode === 'day' ? dn(l.from) : Math.floor(mins(l.start) / DAY); }
+
+  function isHoliday(state, n) { const d = ds(n); return state.holidays.find(h => h.date === d); }
+
+  // ---- 월 계산 ----
+  function compute(state, y, m) {
+    const ctx = { warn: [] };
+    const first = dn(`${y}-${String(m).padStart(2, '0')}-01`);
+    const nd = ymDays(y, m);
+    const last = first + nd - 1;
+    const calStart = first - dow(first);                 // 첫 주 일요일
+    const calEnd = last + (6 - dow(last));               // 마지막 주 토요일
+    const people = state.people.slice();
+    const P = {};
+    for (const p of people) P[p.id] = { p, daily: {}, shifts: [] };
+
+    const days = [];
+    for (let n = calStart - 0; n <= calEnd + 1; n++) {
+      const hol = isHoliday(state, n);
+      const day = { n, date: ds(n), dow: dow(n), hol: !!hol, holName: hol ? hol.name : '', inMonth: n >= first && n <= last, base: {}, act: {} };
+      for (const k of SHIFT_ORDER) { day.base[k] = baseShift(state, n, k); day.act[k] = actualShift(state, n, k, (n >= calStart && n <= calEnd) ? ctx : null); }
+      days.push(day);
+      for (const k of SHIFT_ORDER) {
+        for (const pid of day.act[k]) {
+          if (!P[pid]) continue;
+          const iv = shiftInterval(n, k);
+          const worked = subtract(iv, leaveCuts(state, pid, n, k));
+          const w = worked.reduce((a, r) => a + r[1] - r[0], 0) / 60;
+          const night = worked.reduce((a, r) => a + nightOf(r), 0) / 60;
+          const sh = { n, kind: k, full: (iv[1] - iv[0]) / 60, worked: w, night, leave: (iv[1] - iv[0]) / 60 - w, changed: day.base[k].indexOf(pid) < 0 };
+          P[pid].shifts.push(sh);
+          const dd = P[pid].daily[n] || (P[pid].daily[n] = { hours: 0, night: 0, hol: 0, kinds: [] });
+          dd.hours += w; dd.night += night; dd.kinds.push(k);
+        }
+      }
+    }
+    // 휴일시간
+    for (const id in P) {
+      const r = P[id];
+      for (const n in r.daily) {
+        const d = r.daily[n]; const nn = Number(n);
+        const holi = !!isHoliday(state, nn);
+        if (r.p.role === '조장') { if (holi || dow(nn) === 0 || dow(nn) === 6) d.hol = Math.min(8, d.hours); }
+        else if (holi) d.hol = d.hours;
+      }
+    }
+    const extras = state.extras.filter(x => { const n = dn(x.date); return n >= first && n <= last; });
+    const dutyKey = `${y}-${String(m).padStart(2, '0')}`;
+    let dutyAuto = 0;
+    for (let n = first; n <= last; n++) if (dow(n) !== 0 && dow(n) !== 6 && !isHoliday(state, n)) dutyAuto++;
+    const dutyDays = (state.settings.dutyDays && state.settings.dutyDays[dutyKey] != null && state.settings.dutyDays[dutyKey] !== '') ? Number(state.settings.dutyDays[dutyKey]) : dutyAuto;
+
+    const res = { y, m, first, last, calStart, calEnd, days: days.filter(d => d.n >= calStart && d.n <= calEnd), dutyDays, dutyAuto, persons: {}, warn: ctx.warn };
+    for (const id in P) {
+      const r = P[id]; const p = r.p;
+      const inM = n => n >= first && n <= last;
+      let total = 0, hol = 0, night = 0, workDays = 0;
+      const holDates = [], night2 = [], night6 = [], nightJ = [];
+      for (let n = first; n <= last; n++) {
+        const d = r.daily[n]; if (!d) continue;
+        total += d.hours; hol += d.hol; night += d.night;
+        if (d.hours > 0) workDays++;
+        if (d.hol > 0) holDates.push(n - first + 1);
+      }
+      for (const sh of r.shifts) {
+        if (!inM(sh.n) || sh.night <= 0) continue;
+        const dd = sh.n - first + 1;
+        if (sh.kind === '오후') night2.push(dd);
+        if (sh.kind === '새벽') night6.push(dd);
+        if (sh.kind === '야간') nightJ.push({ d: dd, h: sh.night });
+      }
+      // 주별 초과 (전월이월 포함, 차월이월 제외)
+      const weeks = [];
+      for (let ws = calStart; ws <= last; ws += 7) {
+        let sum = 0;
+        for (let n = ws; n < ws + 7 && n <= last; n++) { const d = r.daily[n]; if (d) sum += d.hours; }
+        weeks.push({ start: ws, end: ws + 6, sum, over: Math.max(0, sum - 40) });
+      }
+      const ex = extras.filter(x => x.pid === p.id);
+      const exH = ex.reduce((a, x) => a + Number(x.hours || 0), 0);
+      const weekOver = weeks.reduce((a, w) => a + w.over, 0);
+      const out = { id: p.id, p, total: total + (p.role === '관제' ? exH : 0), worked: total, hol, night, workDays, holDates, night2, night6, nightJ, weeks, weekOver, extraH: exH, extras: ex, shifts: r.shifts.filter(s => inM(s.n)), daily: r.daily };
+      if (p.role === '관제') {
+        out.ot = weekOver + exH;
+        out.pay = { ot: floor10(out.ot * (p.otRate || 0)), night: floor10(night * (p.nightRate || 0)), hol: floor10(hol * (p.holRate || 0)) };
+        out.pay.total = out.pay.ot + out.pay.night + out.pay.hol;
+      } else {
+        const dayCnt = out.shifts.filter(s => s.kind === '주간' && s.worked > 0).length;
+        const nightCnt = out.shifts.filter(s => s.kind === '야간' && s.worked > 0).length;
+        const holDays = holDates.length;
+        const lv = { '연가': 0, '병가': 0, '특별휴가': 0, '공가': 0 };
+        for (const l of state.leaves.filter(l => l.pid === p.id)) {
+          const h = leaveHours(state, l, first, last);
+          const k = KINDS.indexOf(l.kind) >= 0 ? l.kind : '연가';
+          lv[k] += h;
+        }
+        const lvT = lv['연가'] + lv['병가'] + lv['특별휴가'] + lv['공가'];
+        const actual = total + exH;
+        const duty = dutyDays * 8 - lvT;
+        const holPay = holDays * 8;
+        const overtime = Math.max(0, total - duty - holPay) + exH;
+        Object.assign(out, { dayCnt, nightCnt, holDays, actual, duty, holPay, overtimeJ: overtime, nightH: night, leaveKinds: lv, leaveTotal: lvT });
+      }
+      res.persons[p.id] = out;
+    }
+    return res;
+  }
+  function floor10(v) { return Math.floor(Math.round(v * 1000) / 1000 / 10) * 10; }
+
+  G.Engine = { compute, baseShift, actualShift, leaveHours, dn, ds, dow, mins, fmtMins, ymDays, DOW_KO, SHIFTS, SHIFT_ORDER, KINDS, nameOf, floor10, isHoliday };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ===== 최소 XLSX 작성기 (외부 라이브러리 없이 동작) ===== */
+(function (G) {
+  'use strict';
+  const enc = new TextEncoder();
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zip(files) { // [{name, data:Uint8Array}] 무압축(store)
+    const parts = [], central = []; let off = 0;
+    for (const f of files) {
+      const nm = enc.encode(f.name), d = f.data, crc = crc32(d);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, 0, true); h.setUint16(12, 0x21, true); h.setUint32(14, crc, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true);
+      h.setUint16(26, nm.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), nm, d);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+      c.setUint16(12, 0, true); c.setUint16(14, 0x21, true); c.setUint32(16, crc, true); c.setUint32(20, d.length, true); c.setUint32(24, d.length, true);
+      c.setUint16(28, nm.length, true); c.setUint32(42, off, true);
+      central.push(new Uint8Array(c.buffer), nm);
+      off += 30 + nm.length + d.length;
+    }
+    const cs = central.reduce((a, b) => a + b.length, 0);
+    const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+    const all = parts.concat(central, [new Uint8Array(e.buffer)]);
+    const out = new Uint8Array(all.reduce((a, b) => a + b.length, 0)); let p = 0;
+    for (const a of all) { out.set(a, p); p += a.length; }
+    return out;
+  }
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  function col(n) { let s = ''; n++; while (n) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
+
+  function build(sheets) {
+    // 스타일 레지스트리
+    const fonts = ['<font><sz val="10"/><name val="맑은 고딕"/><family val="3"/><charset val="129"/></font>'];
+    const fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+    const borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'];
+    const numFmts = []; const xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>']; const xfMap = { '{}': 0 };
+    const idx = (arr, x) => { let i = arr.indexOf(x); if (i < 0) { arr.push(x); i = arr.length - 1; } return i; };
+    function style(s) {
+      if (!s) return 0; const key = JSON.stringify(s); if (xfMap[key] != null) return xfMap[key];
+      const f = idx(fonts, `<font>${s.b ? '<b/>' : ''}<sz val="${s.sz || 10}"/>${s.color ? `<color rgb="FF${s.color}"/>` : ''}<name val="맑은 고딕"/><family val="3"/><charset val="129"/></font>`);
+      const fl = s.fill ? idx(fills, `<fill><patternFill patternType="solid"><fgColor rgb="FF${s.fill}"/><bgColor indexed="64"/></patternFill></fill>`) : 0;
+      const bd = s.border ? idx(borders, '<border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border>') : 0;
+      let nf = 0;
+      if (s.num) { if (s.num === '#,##0') nf = 3; else if (s.num === '0') nf = 1; else { let i = numFmts.indexOf(s.num); if (i < 0) { numFmts.push(s.num); i = numFmts.length - 1; } nf = 164 + i; } }
+      const al = `<alignment${s.h ? ` horizontal="${s.h}"` : ''} vertical="${s.v || 'center'}"${s.wrap ? ' wrapText="1"' : ''}/>`;
+      xfs.push(`<xf numFmtId="${nf}" fontId="${f}" fillId="${fl}" borderId="${bd}" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"${nf ? ' applyNumberFormat="1"' : ''}${fl ? ' applyFill="1"' : ''}>${al}</xf>`);
+      xfMap[key] = xfs.length - 1; return xfMap[key];
+    }
+    const files = [];
+    const sheetXml = sheets.map((sh, si) => {
+      let rowsXml = '';
+      let maxC = 0;
+      sh.rows.forEach((row, ri) => {
+        if (!row) row = [];
+        const ht = sh.heights && sh.heights[ri + 1];
+        let cells = '';
+        row.forEach((c, ci) => {
+          if (c === undefined || c === null) return;
+          if (typeof c !== 'object') c = { v: c };
+          const r = col(ci) + (ri + 1); const s = style(c.s); maxC = Math.max(maxC, ci);
+          if (c.f) cells += `<c r="${r}" s="${s}"><f>${esc(c.f)}</f>${typeof c.v === 'number' ? `<v>${c.v}</v>` : ''}</c>`;
+          else if (typeof c.v === 'number' && isFinite(c.v)) cells += `<c r="${r}" s="${s}"><v>${c.v}</v></c>`;
+          else if (c.v === undefined || c.v === null || c.v === '') cells += `<c r="${r}" s="${s}"/>`;
+          else cells += `<c r="${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${esc(c.v)}</t></is></c>`;
+        });
+        if (cells || ht) rowsXml += `<row r="${ri + 1}"${ht ? ` ht="${ht}" customHeight="1"` : ''}>${cells}</row>`;
+      });
+      const cols = (sh.cols || []).map((w, i) => w ? `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>` : '').join('');
+      const merges = (sh.merges || []).length ? `<mergeCells count="${sh.merges.length}">${sh.merges.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : '';
+      const fit = sh.fit !== false;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${fit ? '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' : ''}<sheetViews><sheetView workbookViewId="0"${si === 0 ? ' tabSelected="1"' : ''}${sh.freeze ? '' : ''}/></sheetViews><sheetFormatPr defaultRowHeight="16.5"/>${cols ? `<cols>${cols}</cols>` : ''}<sheetData>${rowsXml}</sheetData>${merges}<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${sh.landscape ? 'landscape' : 'portrait'}"${fit ? ' fitToWidth="1" fitToHeight="0"' : ''}/></worksheet>`;
+    });
+    sheetXml.forEach((x, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: enc.encode(x) }));
+    const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${numFmts.length ? `<numFmts count="${numFmts.length}">${numFmts.map((f, i) => `<numFmt numFmtId="${164 + i}" formatCode="${esc(f)}"/>`).join('')}</numFmts>` : ''}<fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="표준" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+    files.push({ name: 'xl/styles.xml', data: enc.encode(styles) });
+    const wb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${sheets.map((s, i) => `<sheet name="${esc(s.name.slice(0, 31))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`;
+    files.push({ name: 'xl/workbook.xml', data: enc.encode(wb) });
+    files.push({ name: 'xl/_rels/workbook.xml.rels', data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`) });
+    files.push({ name: '_rels/.rels', data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`) });
+    files.push({ name: '[Content_Types].xml', data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`) });
+    files.reverse();
+    return zip(files);
+  }
+  G.XLSX = { build, col };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ===== 출력 양식 (화면 미리보기와 엑셀이 같은 모델을 공유) ===== */
+(function (G) {
+  'use strict';
+  const E = G.Engine;
+  const S = {
+    title: { b: 1, sz: 20, h: 'center' }, title2: { b: 1, sz: 16, h: 'center' },
+    hd: { b: 1, border: 1, h: 'center', wrap: 1, fill: 'EEF1F5' },
+    c: { border: 1, h: 'center', wrap: 1 }, l: { border: 1, h: 'left', wrap: 1 }, lt: { border: 1, h: 'left', v: 'top', wrap: 1 },
+    n: { border: 1, h: 'right', num: '#,##0' }, nb: { border: 1, h: 'right', num: '#,##0', b: 1, fill: 'F7F7F7' }, cb: { border: 1, h: 'center', b: 1, fill: 'F7F7F7' },
+    plain: { h: 'left' }, right: { h: 'right' }, note: { h: 'left', sz: 9 },
+    red: { border: 1, h: 'center', color: 'C00000', b: 1 }, blue: { border: 1, h: 'center', color: '1F4E99', b: 1 }
+  };
+  const cell = (v, s, f) => ({ v, s, f });
+  const r1 = x => Math.round(x * 100) / 100;
+  const byOrder = (a, b) => (Number(a.order) || 99) - (Number(b.order) || 99);
+  function grid(nr, nc) { return Array.from({ length: nr }, () => Array(nc).fill(undefined)); }
+  function boxFill(rows, r0, r1_, c0, c1, s) { for (let r = r0; r <= r1_; r++) for (let c = c0; c <= c1; c++) if (rows[r][c] === undefined) rows[r][c] = cell('', s); }
+
+  function payStatement(st, R) {
+    const ppl = st.people.filter(p => p.role === '관제').sort(byOrder).filter(p => R.persons[p.id]);
+    const n = ppl.length, rows = grid(5 + n, 14);
+    rows[0][0] = cell(`${R.y}. ${R.m}월 근무수당 지급 명세서`, S.title);
+    rows[1][9] = cell('확인자 :', S.right); rows[1][10] = cell(`${st.settings.approver}  (인)`, S.plain);
+    const H = ['연번', '성   명', '근무\n일수', '시간외근무수당', , , '야간근무수당', , , '휴일근무수당', , , '실수령액', '비 고'];
+    H.forEach((h, i) => { if (h) rows[2][i] = cell(h, S.hd); });
+    ['근무시간', '시간단가', '계', '근무시간', '시간단가', '계', '근무시간', '시간단가', '계'].forEach((h, i) => rows[3][3 + i] = cell(h, S.hd));
+    boxFill(rows, 2, 3, 0, 13, S.hd);
+    let t = { f: 0, i: 0, l: 0, m: 0 };
+    ppl.forEach((p, k) => {
+      const o = R.persons[p.id], r = 5 + k, x = r + 1;
+      const F = E.floor10(o.ot * p.otRate), I = E.floor10(o.night * p.nightRate), L = E.floor10(o.hol * p.holRate);
+      t.f += F; t.i += I; t.l += L; t.m += F + I + L;
+      rows[r] = [cell(k + 1, S.c), cell(p.name, S.c), cell(o.workDays, S.c), cell(r1(o.ot), S.n), cell(p.otRate, S.n), cell(F, S.n, `ROUNDDOWN(D${x}*E${x},-1)`),
+        cell(r1(o.night), S.n), cell(p.nightRate, S.n), cell(I, S.n, `ROUNDDOWN(G${x}*H${x},-1)`), cell(r1(o.hol), S.n), cell(p.holRate, S.n), cell(L, S.n, `ROUNDDOWN(J${x}*K${x},-1)`),
+        cell(F + I + L, S.n, `F${x}+I${x}+L${x}`), cell('', S.c)];
+    });
+    const e = 5 + n;
+    rows[4] = [cell('', S.cb), cell('계', S.cb), cell('', S.cb), cell('', S.cb), cell('', S.cb), cell(t.f, S.nb, `SUM(F6:F${e})`), cell('', S.cb), cell('', S.cb), cell(t.i, S.nb, `SUM(I6:I${e})`), cell('', S.cb), cell('', S.cb), cell(t.l, S.nb, `SUM(L6:L${e})`), cell(t.m, S.nb, `SUM(M6:M${e})`), cell('', S.cb)];
+    const heights = { 1: 60, 2: 26, 3: 30, 4: 30 }; for (let i = 5; i <= e; i++) heights[i] = 30;
+    return { name: '지급명세서', rows, merges: ['A1:N1', 'K2:M2', 'A3:A4', 'B3:B4', 'C3:C4', 'D3:F3', 'G3:I3', 'J3:L3', 'M3:M4', 'N3:N4'], cols: [6.3, 9.7, 6.7, 9.4, 9.7, 12, 8, 9.7, 13, 10.8, 9.7, 13, 13, 11.3], heights, landscape: true, total: t };
+  }
+
+  function workDetail(st, R) {
+    const ppl = st.people.filter(p => p.role === '관제').sort(byOrder).filter(p => R.persons[p.id]);
+    const n = ppl.length, rows = grid(4 + n, 12);
+    rows[0][0] = cell(`${R.y}. ${R.m}월 개인별 근무내역 통보`, S.title);
+    const hd = [[1, 0, '소  속'], [1, 1, '직  급'], [1, 2, '성 명'], [1, 3, '출 근\n근 무\n일 수'], [1, 4, '초과근무수당'], [2, 4, '기본시간\n(10시간)'], [2, 5, '실적시간'], [3, 5, '합계'], [3, 6, 'IC카드\n체크분'], [3, 7, 'IC카드\n미체크분'],
+      [1, 8, '야  간\n근  무\n수  당\nⓐ'], [1, 9, '휴  일\n근  무\n수  당\nⓑ*8'], [1, 10, '야   간\n미체크\n내   역\nⓐ'], [1, 11, '휴   일\n미체크\n내   역\nⓑ']];
+    hd.forEach(([r, c, v]) => rows[r][c] = cell(v, S.hd)); boxFill(rows, 1, 3, 0, 11, S.hd);
+    ppl.forEach((p, k) => {
+      const o = R.persons[p.id], r = 4 + k;
+      const nightTxt = `2시간(${o.night2.join(',')})\n6시간(${o.night6.join(',')})`;
+      rows[r] = [cell(st.settings.org, S.c), cell(p.grade || '', S.c), cell(p.name, S.c), cell(o.workDays, S.c), cell('', S.c), cell(r1(o.ot), S.c), cell('', S.c), cell(r1(o.ot), S.c, `F${r + 1}`),
+        cell(r1(o.night), S.c), cell(r1(o.hol), S.c), cell(nightTxt, S.l), cell(o.holDates.map(d => d + '일').join(', '), S.c)];
+    });
+    const heights = { 1: 55, 2: 23, 3: 21, 4: 33 }; for (let i = 5; i <= 4 + n; i++) heights[i] = 41;
+    return { name: '근무내역', rows, merges: ['A1:L1', 'A2:A4', 'B2:B4', 'C2:C4', 'D2:D4', 'E2:H2', 'E3:E4', 'F3:H3', 'I2:I4', 'J2:J4', 'K2:K4', 'L2:L4'], cols: [15, 7.7, 7.4, 6.7, 9.3, 6.7, 8, 10.6, 6.7, 8, 35.6, 21.7], heights, landscape: true };
+  }
+
+  function jangSheet(st, R) {
+    const ppl = st.people.filter(p => p.role === '조장').filter(p => R.persons[p.id]);
+    const n = ppl.length, rows = grid(5 + n + 2 + n, 16);
+    rows[0][0] = cell(`${st.settings.org} 조장 ${R.y}년 ${R.m}월 수당 내역`, S.title2);
+    rows[1][7] = cell(`확인 :   ${st.settings.approver} (인)`, S.plain);
+    rows[2][8] = cell('복무규정 근무일수 :', S.right); rows[2][10] = cell(R.dutyDays, { h: 'center', b: 1 });
+    const hd = [[3, 0, '직급'], [3, 1, '성명'], [3, 2, '근무일수'], [4, 2, '주간\nⓐ'], [4, 3, '야간\nⓑ'], [3, 4, '휴일\n근무\n일수'], [3, 5, '실제\n근무시간\n①'], [3, 6, '복무규정\n근무시간\n②'], [3, 7, '휴일근무수당\n지급시간\n③'], [3, 8, '초과근무\n시간\n①-②-③'], [3, 9, '야간근무\n시간'], [3, 10, '미체크\n초과'],
+      [3, 11, '복무규정 제외시간'], [4, 11, '연가'], [4, 12, '병가'], [4, 13, '특별\n휴가'], [4, 14, '공가'], [4, 15, '계']];
+    hd.forEach(([r, c, v]) => rows[r][c] = cell(v, S.hd)); boxFill(rows, 3, 4, 0, 15, S.hd);
+    ppl.forEach((p, k) => {
+      const o = R.persons[p.id], r = 5 + k, lv = o.leaveKinds;
+      rows[r] = [cell(p.grade || '청원경찰', S.c), cell(p.name, S.c), cell(o.dayCnt, S.c), cell(o.nightCnt, S.c), cell(o.holDays, S.c), cell(r1(o.actual), S.c), cell(r1(o.duty), S.c), cell(o.holPay, S.c), cell(r1(o.overtimeJ), S.c), cell(r1(o.nightH), S.c), cell(r1(o.extraH), S.c),
+        cell(r1(lv['연가']), S.c), cell(r1(lv['병가']), S.c), cell(r1(lv['특별휴가']), S.c), cell(r1(lv['공가']), S.c), cell(r1(o.leaveTotal), S.c)];
+    });
+    const b = 5 + n + 1;
+    rows[b][1] = cell('휴일근무', S.hd); rows[b][2] = cell('', S.hd); rows[b][3] = cell('', S.hd); rows[b][4] = cell('미체크초과', S.hd); rows[b][5] = cell('사유', S.hd);
+    for (let c = 6; c <= 9; c++) rows[b][c] = cell('', S.hd);
+    const merges = ['A1:P1', 'H2:P2', 'I3:J3', 'A4:A5', 'B4:B5', 'C4:D4', 'E4:E5', 'F4:F5', 'G4:G5', 'H4:H5', 'I4:I5', 'J4:J5', 'K4:K5', 'L4:P4', `B${b + 1}:D${b + 1}`, `F${b + 1}:J${b + 1}`];
+    ppl.forEach((p, k) => {
+      const o = R.persons[p.id], r = b + 1 + k;
+      rows[r][0] = cell(p.name, S.c); rows[r][1] = cell(o.holDates.join(','), S.c); rows[r][2] = cell('', S.c); rows[r][3] = cell('', S.c);
+      rows[r][4] = cell(o.extraH ? r1(o.extraH) : '', S.c); rows[r][5] = cell(o.extras.map(x => x.memo || `${x.date.slice(5).replace('-', '/')} ${x.hours}시간`).join(', '), S.l);
+      for (let c = 6; c <= 9; c++) rows[r][c] = cell('', S.l);
+      merges.push(`B${r + 1}:D${r + 1}`, `F${r + 1}:J${r + 1}`);
+    });
+    const heights = { 1: 32, 2: 25, 3: 25, 4: 42, 5: 42 }; for (let i = 6; i <= 5 + n; i++) heights[i] = 34;
+    return { name: '조장수당내역', rows, merges, cols: [12, 9, 7, 7, 7, 10, 10, 12, 10, 9, 8, 7, 7, 7, 7, 7], heights, landscape: true };
+  }
+
+  function cwSheet(st, R) {
+    const ppl = st.people.filter(p => p.role === '조장').sort(byOrder).filter(p => R.persons[p.id]);
+    const n = ppl.length, rows = grid(7 + n + 3, 15);
+    rows[0][1] = cell(`${R.y}년 ${R.m}월 초과근무내역 통보`, S.title2);
+    rows[1][1] = cell('직종 :', S.right); rows[1][2] = cell('청원경찰', S.plain); rows[1][11] = cell('확인자 :', S.right); rows[1][13] = cell(st.settings.approver, S.plain); rows[1][14] = cell('(인)', S.plain);
+    const hd = [[2, 1, '일련\n번호'], [2, 2, '직  급'], [2, 3, '성명'], [2, 4, '출근\n근무\n일수'], [2, 5, '시간외수당 지급할 시간수'], [3, 5, '기본\n시간'], [3, 6, '총\n합계'], [3, 7, '실적시간'], [4, 7, '계'], [4, 8, '인사랑\n체크'], [4, 9, '계'], [4, 10, 'IC카드\n체크,\n미체크'], [3, 11, '야간\n근무\n시간'], [3, 12, '휴일\n근무\n일수'], [2, 13, 'IC카드  미체크 사유']];
+    hd.forEach(([r, c, v]) => rows[r][c] = cell(v, S.hd)); boxFill(rows, 2, 5, 1, 14, S.hd);
+    const sum = { e: 0, k: 0, l: 0, m: 0 };
+    ppl.forEach((p, k) => {
+      const o = R.persons[p.id], r = 7 + k, x = r + 1;
+      const ex = o.extras.map(e => '   - ' + (e.memo || `${e.date.slice(5).replace('-', '/')} ${e.hours}시간`)).join('\n');
+      const nightL = o.nightJ.map(j => `${j.d}일 ${r1(j.h)}시간`).join(',');
+      const txt = `O 시간외근무\n${ex || '  '}\nO 야간근무\n   - ${nightL}\nO 휴일근무\n  - ${o.holDates.join(',')}`;
+      const days = o.dayCnt + o.nightCnt;
+      sum.e += days; sum.k += o.overtimeJ; sum.l += o.nightH; sum.m += o.holDays;
+      rows[r] = [undefined, cell(k + 1, S.c), cell(p.grade || '청원경찰', S.c), cell(p.name, S.c), cell(days, S.c), cell(0, S.c), cell(r1(o.overtimeJ), S.c, `H${x}+J${x}`), cell(0, S.c, `I${x}`), cell(0, S.c), cell(r1(o.overtimeJ), S.c, `K${x}`), cell(r1(o.overtimeJ), S.c), cell(r1(o.nightH), S.c), cell(o.holDays, S.c), cell(txt, S.lt), cell('', S.lt)];
+    });
+    const e = 7 + n;
+    rows[6] = [undefined, cell('계', S.cb), cell('', S.cb), cell(n, S.cb), cell(sum.e, S.cb, `SUBTOTAL(9,E8:E${e})`), cell(0, S.cb, `SUBTOTAL(9,F8:F${e})`), cell(r1(sum.k), S.cb, `SUBTOTAL(9,G8:G${e})`), cell(0, S.cb, `SUBTOTAL(9,H8:H${e})`), cell(0, S.cb, `SUBTOTAL(9,I8:I${e})`), cell(r1(sum.k), S.cb, `SUBTOTAL(9,J8:J${e})`), cell(r1(sum.k), S.cb, `SUBTOTAL(9,K8:K${e})`), cell(r1(sum.l), S.cb, `SUBTOTAL(9,L8:L${e})`), cell(sum.m, S.cb, `SUBTOTAL(9,M8:M${e})`), cell('', S.cb), cell('', S.cb)];
+    rows[e + 1][1] = cell('※ 장기교육이나 휴직, 출산휴가 등으로 시간외수당이 지급되지 않는 직원도 성명란에 기재하시고 출근근무일수를 0으로 표시', S.note);
+    rows[e + 2][1] = cell('※ 월중 승진자는 승진전과 승진후로 구분하여 근무일수 및 시간을 표시', S.note);
+    const merges = ['B1:O1', 'C2:D2', 'L2:M2', 'B3:B6', 'C3:C6', 'D3:D6', 'E3:E6', 'F3:M3', 'F4:F6', 'G4:G6', 'H4:K4', 'H5:H6', 'I5:I6', 'J5:J6', 'K5:K6', 'L4:L6', 'M4:M6', 'N3:O6', 'B7:C7', 'N7:O7', `B${e + 2}:O${e + 2}`, `B${e + 3}:O${e + 3}`];
+    for (let r = 8; r <= e; r++) merges.push(`N${r}:O${r}`);
+    const heights = { 1: 40, 2: 24, 3: 30, 4: 30, 5: 30, 6: 30, 7: 25 }; for (let i = 8; i <= e; i++) heights[i] = 140;
+    return { name: '청원경찰 초과근무내역', rows, merges, cols: [2, 6.1, 9.4, 6.6, 5.7, 6.6, 5.7, 7.4, 7, 6.6, 8.9, 6.3, 6.7, 27.4, 18], heights, landscape: true };
+  }
+
+  function rosterSheet(st, R) {
+    const rows = [], merges = ['A1:I1'];
+    rows.push([cell(`${st.settings.title} 근무명령`, S.title2)]);
+    rows.push([cell(`${R.y}년 ${R.m}월`, { h: 'left', b: 1 })]);
+    rows.push(['구분', '일', '월', '화', '수', '목', '금', '토', '비고'].map(h => cell(h, S.hd)));
+    const nm = ids => ids.map(id => E.nameOf(st, id)).join('·');
+    for (let w = 0; w < R.days.length / 7; w++) {
+      const wk = R.days.slice(w * 7, w * 7 + 7);
+      rows.push([cell(`${w + 1}주`, S.cb)].concat(wk.map(d => cell(`${Number(d.date.slice(8))}${d.inMonth ? '' : ''}${d.hol ? ' ' + d.holName : ''}`, d.hol || d.dow === 0 ? S.red : d.dow === 6 ? S.blue : S.cb))).concat([cell('', S.cb)]));
+      for (const k of E.SHIFT_ORDER) rows.push([cell(k, S.c)].concat(wk.map(d => cell(d.inMonth ? nm(d.act[k]) : '', S.c))).concat([cell('', S.c)]));
+    }
+    rows.push([]);
+    rows.push([cell('조장: 주간 08~20 / 야간 20~08     관제: 새벽 00~08 / 오전 08~16 / 오후 16~24', S.note)]);
+    return { name: '근무명령', rows, merges, cols: [8, 15, 15, 15, 15, 15, 15, 15, 12], landscape: true };
+  }
+
+  function summarySheet(st, R) {
+    const rows = [[cell(`${R.y}년 ${R.m}월 수당 계산 요약`, S.title2)], []];
+    rows.push(['구분', '조', '이름', '근무일수', '총근무시간', '주초과시간', '추가근무', '휴일시간', '야간시간', '시간외수당', '야간수당', '휴일수당', '합계'].map(h => cell(h, S.hd)));
+    for (const p of st.people) {
+      const o = R.persons[p.id]; if (!o) continue;
+      if (p.role === '관제') rows.push([cell('관제', S.c), cell(p.team + '조', S.c), cell(p.name, S.c), cell(o.workDays, S.c), cell(r1(o.total), S.n), cell(r1(o.weekOver), S.n), cell(r1(o.extraH), S.n), cell(r1(o.hol), S.n), cell(r1(o.night), S.n), cell(o.pay.ot, S.n), cell(o.pay.night, S.n), cell(o.pay.hol, S.n), cell(o.pay.total, S.n)]);
+      else rows.push([cell('조장', S.c), cell(p.team + '조', S.c), cell(p.name, S.c), cell(o.dayCnt + o.nightCnt, S.c), cell(r1(o.worked), S.n), cell(r1(o.weekOver), S.n), cell(r1(o.extraH), S.n), cell(r1(o.hol), S.n), cell(r1(o.night), S.n), cell('조장수당내역 참조', S.c), cell('', S.c), cell('', S.c), cell('', S.c)]);
+    }
+    return { name: '수당계산', rows, merges: ['A1:M1'], cols: [7, 6, 9, 9, 11, 11, 10, 10, 10, 12, 12, 12, 13], landscape: true };
+  }
+
+  function dailySheet(st, R) {
+    const rows = [[cell(`${R.y}년 ${R.m}월 개인별 일별 근무 상세`, S.title2)], []];
+    rows.push(['이름', '구분', '날짜', '요일', '근무', '시간', '근무시간', '야간', '휴일', '휴가차감', '비고'].map(h => cell(h, S.hd)));
+    for (const p of st.people) {
+      const o = R.persons[p.id]; if (!o) continue;
+      for (const sh of o.shifts) {
+        const t = E.SHIFTS[sh.kind], d = R.days.find(x => x.n === sh.n);
+        const hol = (o.daily[sh.n] && o.daily[sh.n].hol) || 0;
+        rows.push([cell(p.name, S.c), cell(p.role, S.c), cell(E.ds(sh.n), S.c), cell(E.DOW_KO[E.dow(sh.n)], S.c), cell(sh.kind, S.c), cell(`${String(t.s / 60).padStart(2, '0')}~${String(t.e / 60 % 24).padStart(2, '0')}`, S.c), cell(r1(sh.worked), S.n), cell(r1(sh.night), S.n), cell(o.daily[sh.n].kinds[0] === sh.kind ? r1(hol) : '', S.n), cell(sh.leave ? r1(sh.leave) : '', S.n), cell([sh.changed ? '근무변경' : '', d && d.hol ? d.holName : ''].filter(Boolean).join(' / '), S.l)]);
+      }
+      for (const x of o.extras) rows.push([cell(p.name, S.c), cell(p.role, S.c), cell(x.date, S.c), cell(E.DOW_KO[E.dow(E.dn(x.date))], S.c), cell('추가근무', S.c), cell('', S.c), cell(Number(x.hours), S.n), cell('', S.n), cell('', S.n), cell('', S.n), cell(x.memo || '', S.l)]);
+    }
+    return { name: '일별상세', rows, merges: ['A1:K1'], cols: [9, 6, 12, 5, 8, 9, 9, 7, 7, 9, 24], landscape: false };
+  }
+
+  function inMonthRange(R, aStr, bStr) { const a = E.dn(aStr), b = E.dn(bStr); return b >= R.calStart && a <= R.last; }
+  function leaveSheet(st, R) {
+    const rows = [[cell(`${R.y}년 ${R.m}월 관련 휴가 목록`, S.title2)], []];
+    rows.push(['이름', '종류', '방식', '시작', '종료', '차감시간', '메모'].map(h => cell(h, S.hd)));
+    const ls = st.leaves.filter(l => l.mode === 'day' ? inMonthRange(R, l.from, l.to) : inMonthRange(R, l.start, l.end)).sort((a, b) => (a.start || a.from).localeCompare(b.start || b.from));
+    for (const l of ls) rows.push([cell(E.nameOf(st, l.pid), S.c), cell(l.kind, S.c), cell(l.mode === 'day' ? '일 단위' : '시간 지정', S.c), cell(l.mode === 'day' ? l.from : l.start.replace('T', ' '), S.c), cell(l.mode === 'day' ? l.to : l.end.replace('T', ' '), S.c), cell(r1(E.leaveHours(st, l)), S.n), cell(l.memo || '', S.l)]);
+    return { name: '휴가목록', rows, merges: ['A1:G1'], cols: [9, 9, 9, 17, 17, 9, 24] };
+  }
+  function changeSheet(st, R) {
+    const rows = [[cell(`${R.y}년 ${R.m}월 근무자 변경 목록`, S.title2)], []];
+    rows.push(['날짜', '근무', '변경 전', '변경 후', '메모'].map(h => cell(h, S.hd)));
+    st.changes.filter(c => inMonthRange(R, c.date, c.date)).sort((a, b) => a.date.localeCompare(b.date)).forEach(c => rows.push([cell(c.date, S.c), cell(c.shift, S.c), cell(c.fromId ? E.nameOf(st, c.fromId) : '(추가 투입)', S.c), cell(c.toId ? E.nameOf(st, c.toId) : '(인원 빼기)', S.c), cell(c.memo || '', S.l)]));
+    return { name: '근무변경목록', rows, merges: ['A1:E1'], cols: [12, 8, 10, 10, 30] };
+  }
+  function extraSheet(st, R) {
+    const rows = [[cell(`${R.y}년 ${R.m}월 추가근무·미체크 목록`, S.title2)], []];
+    rows.push(['날짜', '이름', '구분', '시간', '메모'].map(h => cell(h, S.hd)));
+    st.extras.filter(x => inMonthRange(R, x.date, x.date) && E.dn(x.date) >= R.first).sort((a, b) => a.date.localeCompare(b.date)).forEach(x => { const p = st.people.find(q => q.id === x.pid); rows.push([cell(x.date, S.c), cell(p ? p.name : '', S.c), cell(p ? p.role : '', S.c), cell(Number(x.hours), S.n), cell(x.memo || '', S.l)]); });
+    return { name: '추가근무목록', rows, merges: ['A1:E1'], cols: [12, 9, 7, 7, 30] };
+  }
+
+  const FORMS = [
+    { key: 'pay', label: '지급명세서', fn: payStatement },
+    { key: 'detail', label: '근무내역', fn: workDetail },
+    { key: 'jang', label: '조장수당내역', fn: jangSheet },
+    { key: 'cw', label: '청원경찰 초과근무내역', fn: cwSheet },
+    { key: 'roster', label: '근무명령', fn: rosterSheet }
+  ];
+  const EXTRA = [summarySheet, dailySheet, leaveSheet, changeSheet, extraSheet];
+  function allSheets(st, R) { return FORMS.map(f => f.fn(st, R)).concat(EXTRA.map(f => f(st, R))); }
+  G.Reports = { FORMS, allSheets, S };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ===== 엑셀 읽기 (.xls BIFF8 / .xlsx) — 외부 라이브러리 없이 첫 시트를 2차원 배열로 ===== */
+(function (G) {
+  'use strict';
+  const u16 = (b, o) => b[o] | (b[o + 1] << 8);
+  const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+  const i32 = (b, o) => b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24);
+
+  // ---- 복합 문서(CFB)에서 Workbook 스트림 꺼내기 ----
+  function cfbStream(buf, names) {
+    const b = buf;
+    if (u32(b, 0) !== 0xE011CFD0) throw new Error('엑셀(.xls) 파일 형식이 아닙니다.');
+    const ss = 1 << u16(b, 30), mss = 1 << u16(b, 32);
+    const nFat = u32(b, 44), dirStart = u32(b, 48), cutoff = u32(b, 56), miniFatStart = u32(b, 60), difStart = u32(b, 68);
+    const sec = n => 512 + n * ss;
+    const difat = []; for (let i = 0; i < 109; i++) difat.push(u32(b, 76 + i * 4));
+    let d = difStart, guard = 0;
+    while (d !== 0xFFFFFFFE && d !== 0xFFFFFFFF && guard++ < 1000) { const o = sec(d); for (let i = 0; i < ss / 4 - 1; i++) difat.push(u32(b, o + i * 4)); d = u32(b, o + ss - 4); }
+    const fat = []; for (let i = 0; i < nFat; i++) { const o = sec(difat[i]); for (let j = 0; j < ss / 4; j++) fat.push(u32(b, o + j * 4)); }
+    const chain = (s, f) => { const r = []; let g = 0; while (s < 0xFFFFFFFA && g++ < 100000) { r.push(s); s = f[s]; } return r; };
+    const read = (start, size) => { const out = new Uint8Array(size); let p = 0; for (const s of chain(start, fat)) { const o = sec(s); const n = Math.min(ss, size - p); if (n <= 0) break; out.set(b.subarray(o, o + n), p); p += n; } return out; };
+    // 디렉터리
+    const dirBytes = (() => { const c = chain(dirStart, fat); const out = new Uint8Array(c.length * ss); c.forEach((s, i) => out.set(b.subarray(sec(s), sec(s) + ss), i * ss)); return out; })();
+    const ents = [];
+    for (let o = 0; o + 128 <= dirBytes.length; o += 128) {
+      const nl = u16(dirBytes, o + 64); let name = ''; for (let i = 0; i < Math.max(0, nl / 2 - 1); i++) name += String.fromCharCode(u16(dirBytes, o + i * 2));
+      ents.push({ name, type: dirBytes[o + 66], start: u32(dirBytes, o + 116), size: u32(dirBytes, o + 120) });
+    }
+    const root = ents[0];
+    const ent = ents.find(e => e.type === 2 && names.includes(e.name));
+    if (!ent) throw new Error('엑셀 통합문서 데이터를 찾지 못했습니다.');
+    if (ent.size >= cutoff) return read(ent.start, ent.size);
+    // 미니 스트림
+    const mini = read(root.start, root.size);
+    const mfat = []; if (miniFatStart < 0xFFFFFFFA) { for (const s of chain(miniFatStart, fat)) { const o = sec(s); for (let j = 0; j < ss / 4; j++) mfat.push(u32(b, o + j * 4)); } }
+    const out = new Uint8Array(ent.size); let p = 0;
+    for (const s of chain(ent.start, mfat)) { const n = Math.min(mss, ent.size - p); if (n <= 0) break; out.set(mini.subarray(s * mss, s * mss + n), p); p += n; }
+    return out;
+  }
+
+  // ---- BIFF8 ----
+  function rk(v) { let n; if (v & 2) n = v >> 2; else { const bb = new ArrayBuffer(8), dv = new DataView(bb); dv.setUint32(4, v & 0xFFFFFFFC, true); dv.setUint32(0, 0, true); n = dv.getFloat64(0, true); } return v & 1 ? n / 100 : n; }
+  function parseXls(buf) {
+    const w = cfbStream(buf, ['Workbook', 'Book']);
+    const recs = []; let o = 0;
+    while (o + 4 <= w.length) { const t = u16(w, o), l = u16(w, o + 2); recs.push({ t, o: o + 4, l }); o += 4 + l; }
+    // SST (CONTINUE 처리)
+    let sst = [];
+    const sIdx = recs.findIndex(r => r.t === 0x00FC);
+    if (sIdx >= 0) {
+      const parts = [recs[sIdx]]; for (let k = sIdx + 1; k < recs.length && recs[k].t === 0x003C; k++) parts.push(recs[k]);
+      let pi = 0, p = parts[0].o + 8, end = parts[0].o + parts[0].l;
+      const total = u32(w, parts[0].o + 4);
+      const need = n => { if (p + n > end && pi < parts.length - 1) { /* 경계 */ } };
+      const nextPart = () => { pi++; p = parts[pi].o; end = parts[pi].o + parts[pi].l; };
+      for (let i = 0; i < total; i++) {
+        if (p >= end) nextPart();
+        const cch = u16(w, p); let flags = w[p + 2]; p += 3;
+        let rt = 0, sz = 0;
+        if (flags & 8) { rt = u16(w, p); p += 2; }
+        if (flags & 4) { sz = u32(w, p); p += 4; }
+        let s = '', left = cch;
+        while (left > 0) {
+          if (p >= end) { nextPart(); flags = w[p]; p += 1; }
+          const wide = flags & 1;
+          const can = Math.min(left, Math.floor((end - p) / (wide ? 2 : 1)));
+          for (let k = 0; k < can; k++) { s += String.fromCharCode(wide ? u16(w, p) : w[p]); p += wide ? 2 : 1; }
+          left -= can;
+          if (can === 0 && left > 0 && p < end) break;
+        }
+        let skip = rt * 4 + sz;
+        while (skip > 0) { if (p >= end) nextPart(); const n = Math.min(skip, end - p); p += n; skip -= n; }
+        sst.push(s);
+        void need;
+      }
+    }
+    // 첫 워크시트 찾기
+    const sheets = recs.filter(r => r.t === 0x0085).map(r => ({ pos: u32(w, r.o), vis: w[r.o + 4], kind: w[r.o + 5] }));
+    const first = sheets.find(s => s.kind === 0) || sheets[0];
+    const rows = [];
+    const put = (r, c, v) => { (rows[r] = rows[r] || [])[c] = v; };
+    let started = false, lastFormula = null;
+    for (const r of recs) {
+      const abs = r.o - 4;
+      if (!started) { if (first && abs === first.pos) started = true; else continue; }
+      if (r.t === 0x000A) break; // EOF
+      const p = r.o;
+      if (r.t === 0x00FD) put(u16(w, p), u16(w, p + 2), sst[u32(w, p + 6)]);
+      else if (r.t === 0x0203) put(u16(w, p), u16(w, p + 2), new DataView(w.buffer, w.byteOffset + p + 6, 8).getFloat64(0, true));
+      else if (r.t === 0x027E) put(u16(w, p), u16(w, p + 2), rk(u32(w, p + 6)));
+      else if (r.t === 0x00BD) { const row = u16(w, p), c0 = u16(w, p + 2), c1 = u16(w, p + r.l - 2); for (let c = c0; c <= c1; c++) put(row, c, rk(u32(w, p + 4 + (c - c0) * 6 + 2))); }
+      else if (r.t === 0x0204) { const n = u16(w, p + 6), wide = w[p + 8] & 1; let s = ''; for (let k = 0; k < n; k++) s += String.fromCharCode(wide ? u16(w, p + 9 + k * 2) : w[p + 9 + k]); put(u16(w, p), u16(w, p + 2), s); }
+      else if (r.t === 0x0006) { const row = u16(w, p), col = u16(w, p + 2); if (u16(w, p + 12) === 0xFFFF && w[p + 6] === 0) lastFormula = [row, col]; else { lastFormula = null; if (u16(w, p + 12) !== 0xFFFF) put(row, col, new DataView(w.buffer, w.byteOffset + p + 6, 8).getFloat64(0, true)); } }
+      else if (r.t === 0x0207 && lastFormula) { const n = u16(w, p), wide = w[p + 2] & 1; let s = ''; for (let k = 0; k < n; k++) s += String.fromCharCode(wide ? u16(w, p + 3 + k * 2) : w[p + 3 + k]); put(lastFormula[0], lastFormula[1], s); lastFormula = null; }
+    }
+    return rows.map(r => r || []);
+  }
+
+  // ---- XLSX (zip, deflate) ----
+  async function inflate(data) {
+    const ds = new DecompressionStream('deflate-raw');
+    const s = new Blob([data]).stream().pipeThrough(ds);
+    return new Uint8Array(await new Response(s).arrayBuffer());
+  }
+  async function unzip(b) {
+    let e = b.length - 22; while (e >= 0 && u32(b, e) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('엑셀(.xlsx) 파일 형식이 아닙니다.');
+    const n = u16(b, e + 10); let p = u32(b, e + 16); const files = {};
+    for (let i = 0; i < n; i++) {
+      const method = u16(b, p + 10), csize = u32(b, p + 20), nl = u16(b, p + 28), xl = u16(b, p + 30), cl = u16(b, p + 32), lo = u32(b, p + 42);
+      const name = new TextDecoder().decode(b.subarray(p + 46, p + 46 + nl));
+      const ds = lo + 30 + u16(b, lo + 26) + u16(b, lo + 28);
+      files[name] = { method, data: b.subarray(ds, ds + csize) };
+      p += 46 + nl + xl + cl;
+    }
+    return async name => { const f = files[name]; if (!f) return null; const d = f.method === 8 ? await inflate(f.data) : f.data; return new TextDecoder().decode(d); };
+  }
+  async function parseXlsx(buf) {
+    const get = await unzip(buf);
+    const ssx = await get('xl/sharedStrings.xml');
+    const dp = new DOMParser();
+    const sst = ssx ? [...dp.parseFromString(ssx, 'application/xml').getElementsByTagName('si')].map(si => [...si.getElementsByTagName('t')].map(t => t.textContent).join('')) : [];
+    const wbRels = await get('xl/_rels/workbook.xml.rels'); const wb = await get('xl/workbook.xml');
+    let path = 'xl/worksheets/sheet1.xml';
+    try { const rid = dp.parseFromString(wb, 'application/xml').getElementsByTagName('sheet')[0].getAttribute('r:id'); const rel = [...dp.parseFromString(wbRels, 'application/xml').getElementsByTagName('Relationship')].find(r => r.getAttribute('Id') === rid); if (rel) path = 'xl/' + rel.getAttribute('Target').replace(/^\/?xl\//, ''); } catch (e) { }
+    const sx = dp.parseFromString(await get(path), 'application/xml');
+    const rows = [];
+    for (const c of sx.getElementsByTagName('c')) {
+      const ref = c.getAttribute('r'); const m = ref.match(/([A-Z]+)(\d+)/); let col = 0; for (const ch of m[1]) col = col * 26 + ch.charCodeAt(0) - 64;
+      const t = c.getAttribute('t'); const v = c.getElementsByTagName('v')[0]; let val = v ? v.textContent : '';
+      if (t === 's') val = sst[Number(val)]; else if (t === 'inlineStr') val = [...c.getElementsByTagName('t')].map(x => x.textContent).join(''); else if (t !== 'str' && val !== '' && !isNaN(val)) val = Number(val);
+      (rows[Number(m[2]) - 1] = rows[Number(m[2]) - 1] || [])[col - 1] = val;
+    }
+    return rows.map(r => r || []);
+  }
+  async function read(arrayBuffer) {
+    const b = new Uint8Array(arrayBuffer);
+    if (u32(b, 0) === 0xE011CFD0) return parseXls(b);
+    if (u32(b, 0) === 0x04034b50) return parseXlsx(b);
+    const txt = new TextDecoder().decode(b);
+    if (/<table/i.test(txt)) { const d = new DOMParser().parseFromString(txt, 'text/html'); return [...d.querySelectorAll('tr')].map(tr => [...tr.children].map(td => td.textContent.trim())); }
+    throw new Error('읽을 수 없는 파일 형식입니다. (.xls 또는 .xlsx)');
+  }
+  G.XlsRead = { read, parseXls };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ===== 인사시스템 휴가 엑셀(연가·병가·공가·특가) → 휴가 목록 ===== */
+(function (G) {
+  'use strict';
+  const E = () => G.Engine;
+  const KIND = { '연가': '연가', '병가': '병가', '공가': '공가', '특가': '특별휴가', '특별휴가': '특별휴가' };
+  const s = v => (v == null ? '' : String(v)).trim();
+
+  function toLocal(v) {
+    const m = s(v).match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})\s+(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    let [, y, mo, d, hh, mi] = m; const pad = x => String(x).padStart(2, '0');
+    let str = `${y}-${pad(mo)}-${pad(d)}T${pad(hh)}:${mi}`;
+    if (hh === '23' && mi === '59') { const n = E().dn(str) + 1; str = E().ds(n) + 'T00:00'; } // 23:59 → 다음날 0시
+    return str;
+  }
+  // 한 파일(첫 시트 2차원 배열) 해석
+  function parse(rows, fileName) {
+    const hi = rows.findIndex(r => r && r.some(c => s(c) === '성명') && r.some(c => /시작$/.test(s(c))));
+    if (hi < 0) return { error: `${fileName}: '성명'과 '…시작' 칸이 있는 머리글을 찾지 못했습니다.`, items: [] };
+    const H = rows[hi].map(s);
+    const startCol = H.findIndex(c => /시작$/.test(c));
+    const prefix = H[startCol].replace(/시작$/, '');
+    const kind = KIND[prefix];
+    if (!kind) return { error: `${fileName}: '${prefix}' 종류를 알 수 없습니다.`, items: [] };
+    const col = re => H.findIndex(c => re.test(c));
+    const C = { name: col(/^성명$/), start: startCol, end: col(new RegExp('^' + prefix + '종료$')), days: col(new RegExp('^' + prefix + '일수$')), sub: col(new RegExp('^' + prefix + '구분$')), reason: col(/사유/), status: col(/^결재상태$/), cancel: col(/^취소여부$/), grade: col(/^직급$/), no: col(/^No\.?$/i) };
+    const items = [];
+    for (let r = hi + 1; r < rows.length; r++) {
+      const row = rows[r] || []; const name = s(row[C.name]);
+      if (!name) continue;
+      items.push({
+        file: fileName, line: s(row[C.no]) || String(r), kind, name,
+        start: toLocal(row[C.start]), end: toLocal(row[C.end]), rawStart: s(row[C.start]), rawEnd: s(row[C.end]),
+        days: s(row[C.days]), sub: s(row[C.sub]), reason: C.reason >= 0 ? s(row[C.reason]) : '',
+        status: C.status >= 0 ? s(row[C.status]) : '', canceled: C.cancel >= 0 && /취소/.test(s(row[C.cancel])), cancelTxt: C.cancel >= 0 ? s(row[C.cancel]) : ''
+      });
+    }
+    return { kind, items };
+  }
+  // 현재 데이터와 비교해 처리 방법 결정
+  function plan(st, items) {
+    const iv = l => l.mode === 'day' ? [E().dn(l.from) * 1440, (E().dn(l.to) + 1) * 1440] : [E().mins(l.start), E().mins(l.end)];
+    const out = [];
+    const seen = new Set();
+    for (const it of items) {
+      const o = Object.assign({ notes: [], action: 'add', checked: true }, it);
+      const p = st.people.find(x => x.name === it.name);
+      o.pid = p ? p.id : '';
+      o.key = `${it.kind}|${it.sub}|${o.pid}|${it.start}|${it.end}`;
+      if (!p) { o.action = 'none'; o.checked = false; o.notes.push('인원 목록에 없는 이름'); out.push(o); continue; }
+      if (!it.start || !it.end || E().mins(it.end) <= E().mins(it.start)) { o.action = 'none'; o.checked = false; o.notes.push('날짜·시간 형식 확인 필요'); out.push(o); continue; }
+      const mine = st.leaves.filter(l => l.pid === o.pid);
+      const same = mine.find(l => l.src === o.key || (l.mode !== 'day' && l.start === it.start && l.end === it.end));
+      if (it.canceled) {
+        const mineSrc = mine.find(l => l.src === o.key);
+        if (mineSrc) { o.target = mineSrc.id; }
+        if (mineSrc) { o.action = 'delete'; o.checked = true; o.notes.push('인사시스템에서 취소됨 → 등록된 휴가 삭제'); }
+        else { o.action = 'none'; o.checked = false; o.notes.push('취소된 휴가'); }
+        out.push(o); continue;
+      }
+      if (same) { o.action = 'none'; o.checked = false; o.notes.push('이미 등록됨'); out.push(o); continue; }
+      if (seen.has(o.pid + it.start + it.end)) { o.action = 'none'; o.checked = false; o.notes.push('이 파일들 안에서 중복'); out.push(o); continue; }
+      const [a, b] = [E().mins(it.start), E().mins(it.end)];
+      const ov = mine.filter(l => { const [x, y] = iv(l); return x < b && y > a; });
+      if (ov.length) { o.checked = false; o.notes.push('기존 휴가와 겹침: ' + ov.map(l => `${l.kind} ${(l.start || l.from).replace('T', ' ')}`).join(', ')); }
+      if (it.status && it.status !== '결재완료') { o.checked = false; o.notes.push(it.status + ' (결재 끝나면 다시 가져오세요)'); }
+      const hrs = E().leaveHours(st, { pid: o.pid, mode: 'time', start: it.start, end: it.end, hours: null });
+      o.hours = hrs;
+      if (!hrs) o.notes.push('이 시간에 근무가 없어 차감 0시간');
+      seen.add(o.pid + it.start + it.end);
+      out.push(o);
+    }
+    return out;
+  }
+  function memoOf(o) { return o.kind === '병가' ? (o.sub || '') : [o.sub, o.reason].filter(Boolean).join(' - '); }
+  function apply(st, planned, nid) {
+    let add = 0, del = 0;
+    for (const o of planned) {
+      if (!o.checked) continue;
+      if (o.action === 'add') { st.leaves.push({ id: nid('l'), pid: o.pid, kind: o.kind, mode: 'time', start: o.start, end: o.end, hours: null, memo: memoOf(o), src: o.key }); add++; }
+      else if (o.action === 'delete') { st.leaves = st.leaves.filter(l => l.id !== o.target); del++; }
+    }
+    return { add, del };
+  }
+  G.LeaveImport = { parse, plan, apply, memoOf };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ===== 여러 자리 공유: 공유폴더의 데이터 파일 하나를 함께 읽고 씀 ===== */
+(function (G) {
+  'use strict';
+  const COLL = { people: 'id', leaves: 'id', changes: 'id', extras: 'id', holidays: 'date', log: 'id' };
+  const J = x => JSON.stringify(x);
+  const clone = x => JSON.parse(J(x));
+
+  // 3-way 병합: base(마지막으로 맞춘 상태), mine(이 자리), theirs(파일의 최신 상태)
+  function merge(base, mine, theirs) {
+    base = base || {}; const out = clone(theirs);
+    for (const c in COLL) {
+      const k = COLL[c];
+      const B = new Map((base[c] || []).map(x => [x[k], x]));
+      const M = new Map((mine[c] || []).map(x => [x[k], x]));
+      const res = (theirs[c] || []).map(x => x);
+      const idx = new Map(res.map((x, i) => [x[k], i]));
+      for (const [key, x] of M) {
+        const b = B.get(key);
+        if (!b) { if (idx.has(key)) res[idx.get(key)] = x; else { res.push(x); idx.set(key, res.length - 1); } }
+        else if (J(b) !== J(x)) { if (idx.has(key)) res[idx.get(key)] = x; else { res.push(x); idx.set(key, res.length - 1); } }
+      }
+      const del = new Set(); for (const key of B.keys()) if (!M.has(key)) del.add(key);
+      out[c] = res.filter(x => !del.has(x[k]));
+    }
+    out.settings = Object.assign({}, theirs.settings || {});
+    const bs = base.settings || {}, ms = mine.settings || {};
+    for (const key in ms) {
+      if (key === 'dutyDays') continue;
+      if (J(ms[key]) !== J(bs[key])) out.settings[key] = ms[key];
+    }
+    const bd = bs.dutyDays || {}, md = ms.dutyDays || {}, td = Object.assign({}, (theirs.settings || {}).dutyDays || {});
+    for (const key of new Set(Object.keys(bd).concat(Object.keys(md)))) {
+      if (J(md[key]) === J(bd[key])) continue;
+      if (md[key] === undefined) delete td[key]; else td[key] = md[key];
+    }
+    out.settings.dutyDays = td;
+    out.log = (out.log || []).sort((a, b) => a.t.localeCompare(b.t)).slice(-300);
+    out.seq = Math.max(mine.seq || 0, theirs.seq || 0);
+    out.version = theirs.version || mine.version || 1;
+    delete out.ui;
+    return out;
+  }
+
+  // ---- 파일 연결 (Edge/Chrome의 파일 접근 기능) ----
+  const supported = typeof window !== 'undefined' && 'showOpenFilePicker' in window;
+  const S = { linked: false, name: '', lastSync: null, needPerm: false, error: '', busy: false, dirty: false };
+  let handle = null, base = null, lastMod = 0, lastSize = -1, cb = {}, chain = Promise.resolve(), timer = null;
+
+  function idb() {
+    return new Promise((res, rej) => { const r = indexedDB.open('donghae-shiftpay', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  }
+  async function kv(key, val) {
+    const db = await idb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('kv', val === undefined ? 'readonly' : 'readwrite'); const s = tx.objectStore('kv');
+      const r = val === undefined ? s.get(key) : (val === null ? s.delete(key) : s.put(val, key));
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  }
+  function status(patch) { Object.assign(S, patch || {}); cb.onStatus && cb.onStatus(S); }
+  function strip(st) { const o = clone(st); delete o.ui; return o; }
+
+  async function readFile() {
+    const f = await handle.getFile(); const txt = await f.text();
+    lastMod = f.lastModified; lastSize = f.size;
+    if (!txt.trim()) return null;
+    const o = JSON.parse(txt); if (!o.people || !o.leaves) throw new Error('근무수당 데이터 파일이 아닙니다.');
+    return o;
+  }
+  async function writeFile(obj) {
+    const w = await handle.createWritable(); await w.write(JSON.stringify(obj)); await w.close();
+    const f = await handle.getFile(); lastMod = f.lastModified; lastSize = f.size;
+  }
+
+  // 이 자리 변경을 파일에 반영 (항상 최신 파일을 다시 읽고 병합한 뒤 저장)
+  function push(mine, logMsg) {
+    if (!handle || S.needPerm) { status({ dirty: true }); return Promise.resolve(null); }
+    chain = chain.then(async () => {
+      status({ busy: true });
+      try {
+        const theirs = (await readFile()) || strip(mine);
+        const m = clone(mine);
+        if (logMsg) { m.log = (m.log || []).concat([{ id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: new Date().toISOString(), seat: cb.seat ? cb.seat() : '', msg: logMsg }]); }
+        const merged = merge(base, m, theirs);
+        await writeFile(merged);
+        base = clone(merged);
+        status({ busy: false, dirty: false, error: '', lastSync: new Date() });
+        return merged;
+      } catch (e) {
+        status({ busy: false, dirty: true, error: errMsg(e) });
+        return null;
+      }
+    });
+    return chain;
+  }
+  function errMsg(e) {
+    const s = String(e && (e.message || e.name) || e);
+    if (/NotAllowed|permission/i.test(s)) return '파일 권한이 필요합니다. "다시 연결"을 눌러 주세요.';
+    if (/NotFound/i.test(s)) return '공유 파일을 찾을 수 없습니다(공유폴더 연결 확인).';
+    if (/NoModificationAllowed|InvalidState|locked/i.test(s)) return '다른 자리에서 저장 중입니다. 잠시 후 다시 시도합니다.';
+    return s;
+  }
+  // 다른 자리 변경 확인 (주기적으로)
+  async function poll() {
+    if (!handle || S.needPerm || S.busy) return;
+    try {
+      const f = await handle.getFile();
+      if (S.dirty) { const r = await push(cb.getState()); if (r) cb.setState(r, false); return; }
+      if (f.lastModified === lastMod && f.size === lastSize) return;
+      chain = chain.then(async () => {
+        const theirs = await readFile(); if (!theirs) return;
+        const mine = cb.getState();
+        const merged = merge(base, mine, theirs);
+        base = clone(theirs);
+        if (J(merged) !== J(strip(theirs))) { await writeFile(merged); base = clone(merged); }
+        status({ error: '', lastSync: new Date() });
+        cb.setState(merged, true);
+      });
+      await chain;
+    } catch (e) { status({ error: errMsg(e) }); }
+  }
+  function startPoll() { clearInterval(timer); timer = setInterval(poll, 5000); }
+
+  async function attach(h, mine, mode) {
+    handle = h;
+    let theirs = null;
+    try { theirs = await readFile(); } catch (e) { if (mode !== 'create') throw e; }
+    if (mode === 'create' || !theirs) { const o = strip(mine); await writeFile(o); theirs = o; }
+    base = clone(theirs);
+    await kv('handle', h);
+    status({ linked: true, name: h.name, needPerm: false, error: '', lastSync: new Date(), dirty: false });
+    startPoll();
+    return theirs;
+  }
+  const API = {
+    supported, S, merge,
+    init(o) { cb = o; },
+    async create(mine) {
+      const h = await window.showSaveFilePicker({ suggestedName: '근무수당_공유데이터.json', types: [{ description: '근무수당 데이터', accept: { 'application/json': ['.json'] } }] });
+      return attach(h, mine, 'create');
+    },
+    async open(mine) {
+      const [h] = await window.showOpenFilePicker({ types: [{ description: '근무수당 데이터', accept: { 'application/json': ['.json'] } }] });
+      return attach(h, mine, 'open');
+    },
+    async restore() { // 시작 시 이전 연결 복구
+      if (!supported) return null;
+      let h; try { h = await kv('handle'); } catch (e) { return null; }
+      if (!h) return null;
+      handle = h;
+      const p = await h.queryPermission({ mode: 'readwrite' });
+      if (p !== 'granted') { status({ linked: true, name: h.name, needPerm: true }); return null; }
+      try { return await attach(h, cb.getState(), 'open'); } catch (e) { status({ linked: true, name: h.name, error: errMsg(e) }); return null; }
+    },
+    async reconnect(mine) {
+      if (!handle) return null;
+      const p = await handle.requestPermission({ mode: 'readwrite' });
+      if (p !== 'granted') { status({ needPerm: true }); return null; }
+      return attach(handle, mine, 'open');
+    },
+    async disconnect() { clearInterval(timer); handle = null; base = null; await kv('handle', null).catch(() => { }); status({ linked: false, name: '', needPerm: false, error: '', lastSync: null }); },
+    push, poll
+  };
+  G.Sync = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* ===== 인터넷 공유: Firebase 실시간 DB + 총괄/개인 권한 =====
+   shiftpay/master   : 인원(단가 제외)·공휴일·설정      → 모두 읽기, 총괄만 쓰기
+   shiftpay/data     : 휴가·근무변경·추가근무·변경기록   → 로그인한 사람 모두 읽기/쓰기
+   shiftpay/rates    : 사람별 단가                       → 총괄 전체, 개인은 본인 것만 읽기
+   shiftpay/accounts : 로그인 아이디 → 인원 연결          → 총괄 전체, 개인은 본인 것만 읽기 */
+(function (G) {
+  'use strict';
+  const J = x => JSON.stringify(x);
+  const clone = x => x == null ? x : JSON.parse(J(x));
+  const CFG_KEY = 'dh-shiftpay-fb';
+  const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  const DOM = '@shiftpay.local';
+  const RATE_KEYS = ['otRate', 'nightRate', 'holRate'];
+  const DATA_C = ['leaves', 'changes', 'extras', 'log'];
+  const MASTER_C = ['people', 'holidays'];
+  const S = { linked: false, name: '', lastSync: null, needLogin: false, error: '', busy: false, dirty: false, user: '', role: '', myPid: '' };
+  let cb = {}, app = null, root = null, base = null, cfg = null, parts = {}, offs = [];
+
+  const toEmail = id => { id = String(id || '').trim(); return id.includes('@') ? id : id + DOM; };
+  const showId = e => String(e || '').replace(DOM, '');
+  function status(p) { Object.assign(S, p || {}); cb.onStatus && cb.onStatus(S); }
+  function arr(x) { return !x ? [] : Array.isArray(x) ? x.filter(Boolean) : Object.values(x); }
+  function normMaster(v) { v = clone(v) || {}; return { people: arr(v.people), holidays: arr(v.holidays), settings: Object.assign({ dutyDays: {} }, v.settings || {}), version: v.version || 1 }; }
+  function normData(v) { v = clone(v) || {}; const o = {}; DATA_C.forEach(c => o[c] = arr(v[c])); return o; }
+  function combine() {
+    const m = normMaster(parts.master), d = normData(parts.data), r = parts.rates || {};
+    m.settings.dutyDays = m.settings.dutyDays || {};
+    m.people = m.people.map(p => Object.assign({}, p, r[p.id] || {}));
+    return Object.assign({}, m, d, { seq: 0 });
+  }
+  function strip(st) { const o = clone(st); delete o.ui; return o; }
+  function splitMaster(st) { return { people: (st.people || []).map(p => { const q = Object.assign({}, p); RATE_KEYS.forEach(k => delete q[k]); return q; }), holidays: st.holidays || [], settings: st.settings || {}, version: st.version || 1 }; }
+  function splitData(st) { const o = {}; DATA_C.forEach(c => o[c] = st[c] || []); return o; }
+  function splitRates(st) { const r = {}; (st.people || []).forEach(p => { r[p.id] = {}; RATE_KEYS.forEach(k => r[p.id][k] = Number(p[k]) || 0); }); return r; }
+  function splitAccounts(st) { const a = {}; (st.people || []).forEach(p => { const id = String(p.loginId || '').trim(); if (id && /^[A-Za-z0-9_-]+$/.test(id)) a[id] = p.id; }); return a; }
+
+  function parseConfig(txt) {
+    const m = String(txt).match(/\{[\s\S]*\}/); if (!m) throw new Error('설정 내용에서 { } 부분을 찾지 못했습니다.');
+    const s = m[0].replace(/(^|[^:])\/\/.*$/gm, '$1').replace(/([{,]\s*)([A-Za-z_][\w]*)\s*:/g, '$1"$2":').replace(/'/g, '"').replace(/,\s*}/g, '}');
+    const o = JSON.parse(s);
+    if (!o.apiKey || !o.databaseURL) throw new Error('apiKey와 databaseURL이 들어 있어야 합니다. (Realtime Database를 만든 뒤 설정을 복사하세요)');
+    return o;
+  }
+  function loadScript(src) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Firebase를 불러오지 못했습니다(인터넷 연결 확인).')); document.head.appendChild(s); }); }
+  async function sdk() {
+    if (G.firebase && G.firebase.database) return;
+    await loadScript(SDK + 'firebase-app-compat.js'); await loadScript(SDK + 'firebase-auth-compat.js'); await loadScript(SDK + 'firebase-database-compat.js');
+  }
+  function embedded() { try { const el = document.getElementById('fbcfg'); const v = el && JSON.parse(el.textContent); return v && v.config ? v : null; } catch (e) { return null; } }
+  function saved() { try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null') || embedded(); } catch (e) { return embedded(); } }
+  function errMsg(e) {
+    const c = (e && e.code) || '', s = String(e && e.message || e);
+    if (/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c + s)) return '아이디 또는 비밀번호가 맞지 않습니다.';
+    if (/invalid-email/.test(c + s)) return '아이디에는 영문·숫자만 쓰세요.';
+    if (/PERMISSION_DENIED|permission/i.test(c + s)) return '권한이 없습니다. Firebase 규칙을 게시했는지 확인하세요.';
+    if (/network/i.test(c + s)) return '인터넷 연결을 확인하세요.';
+    if (/weak-password/.test(c + s)) return '새 비밀번호는 6자 이상이어야 합니다.';
+    if (/requires-recent-login/.test(c + s)) return '다시 로그인한 뒤 바꿔 주세요.';
+    if (/too-many-requests/.test(c + s)) return '시도가 너무 많습니다. 잠시 후 다시 해 주세요.';
+    return s;
+  }
+  // 브라우저를 닫으면 자동 로그아웃 (같은 PC를 여러 사람이 쓰므로)
+  async function signIn(id, pw) {
+    try { await app.auth().setPersistence(G.firebase.auth.Auth.Persistence.SESSION); } catch (e) { }
+    return (await app.auth().signInWithEmailAndPassword(toEmail(id), pw)).user;
+  }
+  function start() { app = G.firebase.apps.find(a => a.name === 'shiftpay') || G.firebase.initializeApp(cfg.config, 'shiftpay'); }
+  const P = () => (cfg.path || 'shiftpay').replace(/^\/|\/$/g, '');
+  const tryRead = r => r.once('value').then(s => ({ ok: true, v: s.val() }), e => ({ ok: false, e }));
+
+  async function attach(user, mine) {
+    root = app.database().ref(P());
+    const myId = showId(user.email);
+    status({ busy: true, user: myId, needLogin: false, error: '' });
+    const [m, d, r] = await Promise.all([tryRead(root.child('master')), tryRead(root.child('data')), tryRead(root.child('rates'))]);
+    if (!m.ok) throw m.e; if (!d.ok) throw d.e;
+    const admin = r.ok;
+    let myPid = '';
+    parts = { master: m.v, data: d.v, rates: admin ? (r.v || {}) : {} };
+    if (!m.v) {
+      if (!admin) throw new Error('아직 공유 데이터가 없습니다. 총괄 아이디로 먼저 연결해 주세요.');
+      if (!confirm('공유 데이터가 아직 비어 있습니다.\n이 PC의 지금 내용을 올려서 공유를 시작할까요?')) { status({ busy: false }); return null; }
+      const st = strip(mine || cb.getState());
+      await Promise.all([root.child('master').set(splitMaster(st)), root.child('data').set(splitData(st)), root.child('rates').set(splitRates(st)), root.child('accounts').set(splitAccounts(st))]);
+      parts = { master: splitMaster(st), data: splitData(st), rates: splitRates(st) };
+    }
+    if (!admin) {
+      const a = await tryRead(root.child('accounts/' + myId));
+      myPid = a.ok && a.v ? a.v : '';
+      if (myPid) { const rr = await tryRead(root.child('rates/' + myPid)); if (rr.ok && rr.v) parts.rates = { [myPid]: rr.v }; }
+    }
+    status({ role: admin ? 'admin' : 'staff', myPid });
+    base = combine();
+    listen(admin, myPid);
+    status({ linked: true, busy: false, error: '', lastSync: new Date(), name: cfg.config.projectId, dirty: false });
+    return clone(base);
+  }
+  function listen(admin, myPid) {
+    offs.forEach(f => f()); offs = [];
+    const on = (path, key) => { const ref = root.child(path); const f = s => { const v = s.val(); if (key === 'rates' && !admin) parts.rates = v ? { [myPid]: v } : {}; else parts[key] = v; remote(); }; ref.on('value', f, e => status({ error: errMsg(e) })); offs.push(() => ref.off('value', f)); };
+    on('master', 'master'); on('data', 'data');
+    if (admin) on('rates', 'rates'); else if (myPid) on('rates/' + myPid, 'rates');
+  }
+  function remote() {
+    const t = combine(); if (J(t) === J(base)) return;
+    const mineNow = strip(cb.getState());
+    const merged = G.Sync.merge(base, mineNow, t);
+    base = t;
+    status({ lastSync: new Date(), error: '' });
+    if (J(pick(merged, DATA_C)) !== J(pick(t, DATA_C))) push(cb.getState());
+    const canon = o => J(['people', 'holidays', 'leaves', 'changes', 'extras', 'settings'].map(k => o[k] || null));
+    if (canon(merged) !== canon(mineNow)) cb.setState(merged, true); else if (J(merged.log) !== J(mineNow.log)) cb.setState(merged, false);
+  }
+  function pick(o, keys) { const r = {}; keys.forEach(k => r[k] = o[k] || []); return r; }
+
+  async function push(mine, logMsg) {
+    if (!root || S.needLogin) { status({ dirty: true }); return null; }
+    const m = strip(mine);
+    if (logMsg) m.log = (m.log || []).concat([{ id: 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: new Date().toISOString(), seat: S.user, msg: logMsg }]);
+    const b = base;
+    status({ busy: true });
+    try {
+      const rd = await root.child('data').transaction(cur => { const th = Object.assign({}, combine(), normData(cur)); return splitData(G.Sync.merge(b, m, th)); });
+      if (!rd.committed) throw new Error('저장이 취소되었습니다.');
+      parts.data = rd.snapshot.val();
+      if (S.role === 'admin') {
+        const rm = await root.child('master').transaction(cur => { const th = Object.assign({}, combine(), normMaster(cur)); return splitMaster(G.Sync.merge(b, m, th)); });
+        if (rm.committed) parts.master = rm.snapshot.val();
+        const rates = splitRates(m); await root.child('rates').set(rates); parts.rates = rates;
+        await root.child('accounts').set(splitAccounts(m));
+      }
+      base = combine();
+      status({ busy: false, dirty: false, error: '', lastSync: new Date() });
+      return clone(base);
+    } catch (e) { status({ busy: false, dirty: true, error: errMsg(e) }); return null; }
+  }
+
+  function rulesText(adminId) {
+    const A = `auth.token.email === '${(adminId || 'ADMIN') + DOM}'`, p = 'shiftpay';
+    return JSON.stringify({ rules: { [p]: {
+      master: { '.read': 'auth != null', '.write': A },
+      data: { '.read': 'auth != null', '.write': 'auth != null' },
+      rates: { '.read': A, '.write': A, '$pid': { '.read': `auth != null && root.child('${p}/accounts/' + auth.token.email.replace('${DOM}', '')).val() === $pid` } },
+      accounts: { '.read': A, '.write': A, '$id': { '.read': `auth != null && auth.token.email === $id + '${DOM}'` } }
+    } } }, null, 2);
+  }
+
+  const API = {
+    S, parseConfig, push, toEmail, showId, errMsg, rulesText, saved, embedded,
+    async init(o) {
+      cb = o; cfg = saved();
+      if (!cfg) return null;
+      try {
+        await sdk(); start();
+        return await new Promise(res => {
+          const un = app.auth().onAuthStateChanged(async u => { un(); if (!u) { status({ linked: true, needLogin: true, name: cfg.config.projectId }); res(null); } else { try { res(await attach(u)); } catch (e) { status({ linked: true, needLogin: true, error: errMsg(e) }); res(null); } } });
+        });
+      } catch (e) { status({ linked: true, needLogin: true, error: errMsg(e), name: cfg.config.projectId }); return null; }
+    },
+    async connect(configText, id, pw, mine) {
+      cfg = { config: parseConfig(configText), path: 'shiftpay' };
+      await sdk(); start();
+      const u = await signIn(id, pw);
+      localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+      return attach(u, mine);
+    },
+    async login(id, pw) {
+      cfg = cfg || saved(); await sdk(); start();
+      const u = await signIn(id, pw);
+      try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch (e) { }
+      return attach(u);
+    },
+    async logout() { offs.forEach(f => f()); offs = []; root = null; if (app) await app.auth().signOut(); status({ needLogin: true, user: '', role: '', myPid: '' }); },
+    async disconnect() { offs.forEach(f => f()); offs = []; root = null; try { if (app) await app.auth().signOut(); } catch (e) { } localStorage.removeItem(CFG_KEY); cfg = null; status({ linked: false, needLogin: false, name: '', error: '', user: '', role: '', myPid: '', lastSync: null }); },
+    async changePassword(oldPw, newPw) {
+      const u = app && app.auth().currentUser; if (!u) throw new Error('먼저 로그인하세요.');
+      const cred = G.firebase.auth.EmailAuthProvider.credential(u.email, oldPw);
+      await u.reauthenticateWithCredential(cred);
+      await u.updatePassword(newPw);
+    },
+    config: () => cfg
+  };
+  G.FireSync = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script id="fbcfg" type="application/json">{"config": {"apiKey": "AIzaSyD-Kf9a4s-caw1hLqgg2pJdVQVPgr2Nt1I", "authDomain": "donghae-shiftpay.firebaseapp.com", "databaseURL": "https://donghae-shiftpay-default-rtdb.asia-southeast1.firebasedatabase.app", "projectId": "donghae-shiftpay", "storageBucket": "donghae-shiftpay.firebasestorage.app", "messagingSenderId": "626046040485", "appId": "1:626046040485:web:1f04106188b60c3716d04c"}, "path": "shiftpay"}</script>
+<script>window.SEED={"version": 1, "settings": {"baseDate": "2026-05-01", "org": "안전정보센터", "approver": "안전과장  이 인 섭", "dutyDays": {}, "title": "동해시 안전정보센터"}, "people": [], "leaves": [], "changes": [], "extras": [], "holidays": [{"date": "2026-01-01", "name": "신정"}, {"date": "2026-02-16", "name": "설날 연휴"}, {"date": "2026-02-17", "name": "설날"}, {"date": "2026-02-18", "name": "설날 연휴"}, {"date": "2026-03-01", "name": "삼일절"}, {"date": "2026-03-02", "name": "대체휴일"}, {"date": "2026-05-01", "name": "노동절"}, {"date": "2026-05-05", "name": "어린이날"}, {"date": "2026-05-24", "name": "부처님 오신 날"}, {"date": "2026-05-25", "name": "대체휴일"}, {"date": "2026-06-03", "name": "지방선거"}, {"date": "2026-06-06", "name": "현충일"}, {"date": "2026-07-17", "name": "제헌절"}, {"date": "2026-08-15", "name": "광복절"}, {"date": "2026-08-17", "name": "대체휴일"}, {"date": "2026-09-24", "name": "추석 연휴"}, {"date": "2026-09-25", "name": "추석"}, {"date": "2026-09-26", "name": "추석 연휴"}, {"date": "2026-10-03", "name": "개천절"}, {"date": "2026-10-05", "name": "대체휴일"}, {"date": "2026-10-09", "name": "한글날"}, {"date": "2026-12-25", "name": "크리스마스"}], "seq": 1000};</script>
+<script>/* ===== 화면 ===== */
+(function () {
+  'use strict';
+  const E = window.Engine, RP = window.Reports;
+  const KEY = 'donghae-shiftpay-v1';
+  const $ = s => document.querySelector(s);
+  const h = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const r1 = x => Math.round(x * 100) / 100;
+  const won = x => (Math.round(x) || 0).toLocaleString('ko-KR');
+  const pad = n => String(n).padStart(2, '0');
+
+  const SRC = '<!doctype html>\n' + document.documentElement.outerHTML;
+  const isStaff = () => FireSync.S.linked && !FireSync.S.needLogin && FireSync.S.role === 'staff';
+  const isAdmin = () => !isStaff();
+  const me = () => FireSync.S.myPid;
+  const STAFF_VIEWS = ['cal', 'leave', 'change', 'result', 'account'];
+  // ---------- 상태 ----------
+  let st, ui = { view: 'cal', form: 'pay', sel: null, leaveEdit: null, chEdit: null, exEdit: null, leaveDraft: null, chDraft: null, exDraft: null, leaveAll: false };
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) { st = JSON.parse(raw); } } catch (e) { }
+    if (!st) st = JSON.parse(JSON.stringify(window.SEED));
+    st.settings = Object.assign({ baseDate: '2026-05-01', org: '안전정보센터', approver: '안전과장  이 인 섭', dutyDays: {}, title: '동해시 안전정보센터' }, st.settings || {});
+    if (!st.ui) { const d = new Date(); st.ui = { y: d.getFullYear(), m: d.getMonth() + 1 }; }
+    ['people', 'leaves', 'changes', 'extras', 'holidays'].forEach(k => st[k] = st[k] || []);
+    st.seq = st.seq || 1000;
+  }
+  let savedAt = null;
+  function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(st)); savedAt = new Date(); } catch (e) { toast('브라우저 저장에 실패했습니다. 백업 파일로 저장해 주세요.'); } }
+  function save(msg, logText) {
+    saveLocal();
+    if (msg) toast(msg);
+    render();
+    const sy = FireSync.S.linked ? FireSync : Sync.S.linked ? Sync : null;
+    if (sy) sy.push(st, logText || msg || '').then(r => { if (r) applyShared(r, false); });
+  }
+  function applyShared(obj, fromOther) {
+    const keepUi = st.ui; st = obj; st.ui = keepUi; load2(); saveLocal();
+    if (fromOther) toast('다른 자리에서 수정한 내용을 반영했습니다.');
+    const ae = document.activeElement;
+    if (fromOther && ae && ae.closest && ae.closest('#content') && /INPUT|SELECT|TEXTAREA/.test(ae.tagName)) { pendingRender = true; return; }
+    render();
+  }
+  let pendingRender = false;
+  const seat = () => { try { return localStorage.getItem('dh-seat') || ''; } catch (e) { return ''; } };
+  const nid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const person = id => st.people.find(p => p.id === id);
+  const ym = () => ({ y: st.ui.y, m: st.ui.m });
+  function compute() { const { y, m } = ym(); return E.compute(st, y, m); }
+  let toastT;
+  function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
+
+  const NAV = [
+    ['cal', '▦', '근무표'], ['leave', '✈', '휴가 입력'], ['change', '⇄', '근무자 변경'], ['extra', '＋', '추가근무·미체크'],
+    ['result', '₩', '수당 결과'], ['forms', '▤', '출력 양식'], ['settings', '⚙', '인원·설정']
+  ];
+
+  function render() {
+    const R = compute();
+    window.__R = R;
+    if (isStaff() && STAFF_VIEWS.indexOf(ui.view) < 0) ui.view = 'cal';
+    const navs = isStaff() ? NAV.filter(n => STAFF_VIEWS.includes(n[0])).map(n => n[0] === 'result' ? ['result', '₩', '내 수당'] : n).concat([['account', '👤', '내 계정']]) : NAV;
+    const locked = FireSync.S.linked && FireSync.S.needLogin;
+    document.querySelectorAll('.top [data-act="xlsx"], .top [data-nav="result"]').forEach(b => b.style.display = isStaff() || locked ? 'none' : '');
+    $('#nav').innerHTML = locked ? '' : navs.map(([k, ic, t]) => `<button data-nav="${k}" class="${ui.view === k ? 'on' : ''}"><span class="ic">${ic}</span>${t}</button>`).join('');
+    $('#mlabel').textContent = `${st.ui.y}년 ${st.ui.m}월`;
+    $('#saved').innerHTML = syncBadge(); $('#acct').innerHTML = acctHtml();
+    const V = locked ? vLocked : (!st.people.length && !isStaff()) ? vWelcome : { cal: vCal, leave: vLeave, change: vChange, extra: vExtra, result: vResult, forms: vForms, settings: vSettings, account: vAccount }[ui.view];
+    $('#content').innerHTML = V(R);
+    after();
+  }
+  function acctHtml() {
+    const F = FireSync.S;
+    if (F.linked && !F.needLogin && F.user) return `<span style="display:inline-flex;align-items:center;gap:6px"><span class="tag ${F.role === 'admin' ? 'j' : 'g'}" style="font-size:12.5px;padding:4px 10px">👤 ${h(F.user)} · ${F.role === 'admin' ? '총괄' : '개인'}</span><button class="btn sm" data-act="pwOpen">비밀번호 변경</button><button class="btn sm" data-act="fbLogout">로그아웃</button></span>`;
+    return `<button class="btn sm acc" data-act="acctLogin">🔑 로그인</button>`;
+  }
+  function syncBadge() {
+    const F = FireSync.S, tm0 = d => d ? `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` : '';
+    if (F.linked) {
+      if (F.needLogin) return `<span style="color:var(--org)">● 로그인 전</span>`;
+      if (F.error) return `<span style="color:var(--red)" title="${h(F.error)}">● 공유 오류: ${h(F.error)}</span>`;
+      return `<span style="color:var(--acc)">● 인터넷 공유 중</span> ${h(F.user)} · ${F.busy ? '저장 중…' : '동기화 ' + tm0(F.lastSync)}`;
+    }
+    const S = Sync.S, tm = d => d ? `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` : '';
+    if (!S.linked) return savedAt ? `이 PC에만 저장됨 ${tm(savedAt).slice(0, 5)}` : '이 PC에만 저장';
+    if (S.needPerm) return `<button class="btn sm acc" data-act="syncRe">공유 파일 다시 연결</button>`;
+    if (S.error) return `<span style="color:var(--red)" title="${h(S.error)}">● 공유 오류: ${h(S.error)}</span>`;
+    return `<span style="color:var(--acc)">● 공유 중</span> ${h(S.name)} · ${S.busy ? '저장 중…' : '동기화 ' + tm(S.lastSync)}`;
+  }
+  let afterFns = [];
+  function after() { const f = afterFns; afterFns = []; f.forEach(x => x()); }
+
+  function issues(R) {
+    const out = R.warn.map(w => w.msg);
+    if (!st.holidays.some(x => x.date.startsWith(String(R.y)))) out.push(`${R.y}년 공휴일이 등록되어 있지 않습니다. '인원·설정'에서 공휴일(대체공휴일 포함)을 먼저 넣어 주세요.`);
+    for (const l of st.leaves) {
+      const s = l.mode === 'day' ? l.from : l.start.slice(0, 10), e = l.mode === 'day' ? l.to : l.end.slice(0, 10);
+      if (E.dn(e) < R.calStart || E.dn(s) > R.last) continue;
+      if (l.mode === 'time' && E.mins(l.end) <= E.mins(l.start)) out.push(`${person(l.pid)?.name} 휴가(${l.start.replace('T', ' ')}): 종료가 시작보다 빠릅니다.`);
+      else if (E.leaveHours(st, Object.assign({}, l, { hours: null })) === 0) out.push(`${person(l.pid)?.name} ${l.kind}(${s}~${e}): 이 기간에 차감할 근무가 없습니다.`);
+    }
+    return out;
+  }
+  function alertBox(R) {
+    const is = issues(R);
+    if (!is.length) return '';
+    return `<div class="alert"><b>확인 필요 ${is.length}건</b><br>${is.map(h).join('<br>')}</div>`;
+  }
+
+  // ---------- 근무표 ----------
+  function personShiftState(R, pid, n, kind) {
+    const o = R.persons[pid]; if (!o) return { cls: '', sh: null };
+    const all = o.shifts.concat([]);
+    let sh = all.find(s => s.n === n && s.kind === kind);
+    if (!sh) { // 달력 범위(전월/차월)용
+      const d = R.days.find(x => x.n === n);
+      return { cls: d && d.base[kind].indexOf(pid) < 0 ? 'chg' : '', sh: null };
+    }
+    let cls = sh.changed ? 'chg' : '';
+    if (sh.worked === 0) cls = 'lv'; else if (sh.leave > 0) cls = 'pl';
+    return { cls, sh };
+  }
+  function vCal(R) {
+    const dayRows = [];
+    const extrasBy = {};
+    st.extras.forEach(x => { (extrasBy[x.date] = extrasBy[x.date] || []).push(x); });
+    // 전월/차월 칸도 휴가 반영해 보이도록 개별 계산
+    const shiftInfo = (n, kind, pid) => {
+      const iv = [n * 1440 + E.SHIFTS[kind].s, n * 1440 + E.SHIFTS[kind].e];
+      let cut = 0;
+      for (const l of st.leaves) {
+        if (l.pid !== pid) continue;
+        if (l.mode === 'day') { if (n >= E.dn(l.from) && n <= E.dn(l.to)) cut = iv[1] - iv[0]; }
+        else cut = Math.max(cut, Math.max(0, Math.min(iv[1], E.mins(l.end)) - Math.max(iv[0], E.mins(l.start))));
+      }
+      return { full: (iv[1] - iv[0]) / 60, cut: Math.min(cut, iv[1] - iv[0]) / 60 };
+    };
+    const cells = R.days.map(d => {
+      const lines = E.SHIFT_ORDER.map((k, i) => {
+        const names = d.act[k].map(pid => {
+          const info = shiftInfo(d.n, k, pid);
+          let cls = d.base[k].indexOf(pid) < 0 ? 'chg' : '';
+          if (info.cut >= info.full) cls = 'lv'; else if (info.cut > 0) cls = 'pl';
+          const tip = `${person(pid)?.name} ${k}${cls === 'chg' ? ' (근무변경)' : ''}${info.cut ? ` / 휴가 ${r1(info.cut)}시간` : ''}`;
+          return `<button class="nm ${cls}" title="${h(tip)}" data-shift="${d.date}|${k}|${pid}">${h(person(pid)?.name || '?')}${cls === 'pl' ? `<small> -${r1(info.cut)}h</small>` : ''}</button>`;
+        }).join('');
+        const j = E.SHIFTS[k].role === '조장';
+        return (i === 2 ? '<div class="sep"></div>' : '') + `<div class="ln"><span class="k ${j ? 'j' : ''}">${k.slice(0, 1)}${k === '오전' || k === '오후' ? k.slice(1) : ''}</span><span class="v">${names || '<span class="hint">-</span>'}</span></div>`;
+      }).join('');
+      const ex = (extrasBy[d.date] || []).map(x => `<div class="ln"><span class="k" style="color:var(--acc)">추가</span><span class="v"><span class="nm" style="background:var(--acc-soft);color:var(--acc)">${h(person(x.pid)?.name)} +${x.hours}h</span></span></div>`).join('');
+      const dc = d.hol ? 'hol' : d.dow === 0 ? 'sun' : d.dow === 6 ? 'sat' : '';
+      return `<div class="cell ${d.inMonth ? '' : 'out'} ${d.hol ? 'hol' : ''}"><div class="dn ${dc}"><b>${Number(d.date.slice(8))}</b>${d.hol ? `<em>${h(d.holName)}</em>` : ''}${d.inMonth ? '' : '<span class="hint">' + (d.n < R.first ? '전월' : '차월') + '</span>'}<button class="add noprint" title="이 날짜에 입력" data-addday="${d.date}">＋</button></div>${lines}${ex}</div>`;
+    });
+    return `<h2>근무표</h2><p class="sub">이름을 누르면 그 근무에 바로 휴가·대신근무·추가근무를 넣을 수 있습니다. 회색 칸(전월·차월)은 주 초과근무 계산에 쓰이는 날입니다.</p>
+      ${alertBox(R)}
+      <div class="legend"><span><span class="nm">이름</span> 정상</span><span><span class="nm chg">이름</span> 근무변경으로 투입</span><span><span class="nm pl">이름 -4h</span> 일부 휴가</span><span><span class="nm lv">이름</span> 휴가(전체)</span><span>주=주간 야=야간(조장) · 새=새벽 오전 오후(관제)</span></div>
+      <div class="cal">${['일', '월', '화', '수', '목', '금', '토'].map((x, i) => `<div class="dh ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${x}</div>`).join('')}${cells.join('')}</div>`;
+  }
+
+  function openPop(x, y, html) {
+    closePop();
+    const el = document.createElement('div'); el.className = 'pop'; el.id = 'pop'; el.innerHTML = html;
+    document.body.appendChild(el);
+    const W = el.offsetWidth, H = el.offsetHeight;
+    el.style.left = Math.min(x, innerWidth - W - 12) + 'px'; el.style.top = Math.min(y + 8, innerHeight - H - 12) + 'px';
+  }
+  function closePop() { const p = $('#pop'); if (p) p.remove(); }
+
+  function shiftTimes(date, kind) {
+    const n = E.dn(date), s = n * 1440 + E.SHIFTS[kind].s, e = n * 1440 + E.SHIFTS[kind].e;
+    return { start: E.fmtMins(s), end: E.fmtMins(e) };
+  }
+
+  // ---------- 휴가 ----------
+  function leaveDraftDefault() { const { y, m } = ym(); const d = `${y}-${pad(m)}-01`; return { pid: '', kind: '연가', mode: 'time', from: d, to: d, start: d + 'T08:00', end: d + 'T16:00', hours: '', memo: '' }; }
+  function personSelect(name, val, roleFilter, allowEmpty) {
+    const grp = r => st.people.filter(p => p.role === r && (!roleFilter || roleFilter === r)).map(p => `<option value="${p.id}" ${val === p.id ? 'selected' : ''}>${h(p.name)} (${p.team}조)</option>`).join('');
+    return `<select name="${name}">${allowEmpty ? `<option value="">${allowEmpty}</option>` : '<option value="">선택</option>'}${!roleFilter || roleFilter === '조장' ? `<optgroup label="조장">${grp('조장')}</optgroup>` : ''}${!roleFilter || roleFilter === '관제' ? `<optgroup label="관제요원">${grp('관제')}</optgroup>` : ''}</select>`;
+  }
+  function leavePreview(d) {
+    if (!d.pid) return '<div class="preview">이름을 고르면 그 사람의 근무가 표시됩니다.</div>';
+    const p = person(d.pid);
+    const n0 = E.dn(d.mode === 'day' ? d.from : d.start.slice(0, 10));
+    // 해당 날짜 전후 근무 안내
+    const kinds = E.SHIFT_ORDER.filter(k => E.SHIFTS[k].role === p.role);
+    const quick = [];
+    for (let n = n0 - 1; n <= n0 + 1; n++) for (const k of kinds) if (E.actualShift(st, n, k).indexOf(d.pid) >= 0) { const t = shiftTimes(E.ds(n), k); quick.push(`<button type="button" class="chipbtn" data-qshift="${t.start}|${t.end}">${E.ds(n).slice(5).replace('-', '/')} ${k} ${t.start.slice(11)}~${t.end.slice(11)}</button>`); }
+    if (d.mode === 'time' && (!d.start || !d.end || E.mins(d.end) <= E.mins(d.start))) return `<div class="preview err">종료 일시가 시작보다 늦어야 합니다.</div>`;
+    if (d.mode === 'day' && (!d.from || !d.to || E.dn(d.to) < E.dn(d.from))) return `<div class="preview err">종료일이 시작일보다 늦어야 합니다.</div>`;
+    const l = Object.assign({ id: '__draft' }, d, { hours: null });
+    const det = [];
+    const s = d.mode === 'day' ? E.dn(d.from) : Math.floor(E.mins(d.start) / 1440) - 1, e = d.mode === 'day' ? E.dn(d.to) : Math.floor(E.mins(d.end) / 1440);
+    for (let n = s; n <= e; n++) for (const k of kinds) {
+      if (E.actualShift(st, n, k).indexOf(d.pid) < 0) continue;
+      const [a, b] = [n * 1440 + E.SHIFTS[k].s, n * 1440 + E.SHIFTS[k].e];
+      const ov = d.mode === 'day' ? (b - a) : Math.max(0, Math.min(b, E.mins(d.end)) - Math.max(a, E.mins(d.start)));
+      if (ov > 0) det.push(`${E.ds(n).slice(5).replace('-', '/')}(${E.DOW_KO[E.dow(n)]}) ${k} ${r1(ov / 60)}시간`);
+    }
+    const auto = E.leaveHours(st, l);
+    const ls = d.mode === 'day' ? E.dn(d.from) * 1440 : E.mins(d.start), le = d.mode === 'day' ? (E.dn(d.to) + 1) * 1440 + 480 : E.mins(d.end);
+    const dup = st.leaves.filter(x => x.pid === d.pid && x.id !== ui.leaveEdit && (x.mode === 'day' ? E.dn(x.from) * 1440 : E.mins(x.start)) < le && (x.mode === 'day' ? (E.dn(x.to) + 1) * 1440 : E.mins(x.end)) > ls);
+    const dupTxt = dup.length ? `<div style="margin-top:6px;color:#8a1f12"><b>이미 등록된 휴가와 겹칩니다:</b> ${dup.map(x => `${x.kind} ${x.mode === 'day' ? x.from + '~' + x.to : x.start.replace('T', ' ') + '~' + x.end.slice(11)}`).join(', ')}</div>` : '';
+    const cls = !det.length || dup.length ? 'warn' : '';
+    return `<div class="preview ${cls}">${quick.length ? `<div style="margin-bottom:6px">이 무렵 근무: ${quick.join('')} <span class="hint">← 누르면 시간이 채워집니다</span></div>` : ''}
+      ${det.length ? `<b>근무에서 빠지는 시간:</b> ${det.join(', ')}<br><b>차감시간(자동): ${r1(auto)}시간</b>` : '<b>이 기간에 겹치는 근무가 없습니다.</b> 날짜·시간을 확인해 주세요.'}${dupTxt}</div>`;
+  }
+  function vLeave(R) {
+    const d = ui.leaveDraft || (ui.leaveDraft = leaveDraftDefault());
+    if (isStaff()) d.pid = me();
+    const edit = ui.leaveEdit;
+    const list = st.leaves.filter(l => {
+      if (isStaff() && l.pid !== me()) return false;
+      if (ui.leaveAll) return true;
+      const s = l.mode === 'day' ? l.from : l.start.slice(0, 10), e = l.mode === 'day' ? l.to : l.end.slice(0, 10);
+      return E.dn(e) >= R.calStart && E.dn(s) <= R.last;
+    }).sort((a, b) => (b.start || b.from).localeCompare(a.start || a.from));
+    return `<h2>휴가 입력</h2><p class="sub">이름·종류·기간만 넣으면 그 사람의 근무에서 겹치는 시간만큼 자동으로 빠집니다. 여러 날에 걸친 휴가도 한 줄로 넣으면 됩니다.</p>
+    ${alertBox(R)}
+    ${isStaff() ? '' : importCard()}
+    <div class="card" id="leaveForm"><h3>${edit ? '휴가 수정' : '새 휴가 등록'}</h3>
+      <div class="row">
+        <div class="fld"><label>이름</label>${isStaff() ? `<select name="pid"><option value="${me()}">${h(person(me())?.name || '(연결 필요)')}</option></select>` : personSelect('pid', d.pid)}</div>
+        <div class="fld"><label>종류</label><select name="kind">${E.KINDS.map(k => `<option ${d.kind === k ? 'selected' : ''}>${k}</option>`).join('')}</select></div>
+        <div class="fld"><label>입력 방식</label><div class="seg"><button type="button" data-lmode="time" class="${d.mode === 'time' ? 'on' : ''}">시간 지정</button><button type="button" data-lmode="day" class="${d.mode === 'day' ? 'on' : ''}">날짜 단위(근무 전체)</button></div></div>
+        ${d.mode === 'time' ? `<div class="fld"><label>시작 일시</label><input type="datetime-local" name="start" value="${d.start}" step="1800"></div><div class="fld"><label>종료 일시</label><input type="datetime-local" name="end" value="${d.end}" step="1800"></div>`
+        : `<div class="fld"><label>시작일</label><input type="date" name="from" value="${d.from}"></div><div class="fld"><label>종료일</label><input type="date" name="to" value="${d.to}"></div>`}
+        <div class="fld" style="width:120px"><label>차감시간(직접)</label><input type="number" name="hours" min="0" step="0.5" value="${d.hours}" placeholder="자동"></div>
+        <div class="fld" style="flex:1;min-width:160px"><label>메모</label><input name="memo" value="${h(d.memo)}" placeholder="예: 건강검진"></div>
+      </div>
+      <div id="lprev">${leavePreview(d)}</div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" data-act="leaveSave">${edit ? '수정 저장' : '휴가 등록'}</button>${edit ? '<button class="btn" data-act="leaveCancel">취소</button>' : ''}<span class="hint">시간 지정: 야간 근무(20~08시)처럼 날짜를 넘기는 휴가도 그대로 입력하세요. 날짜 단위: 그 날짜에 시작하는 근무 전체가 빠집니다.</span></div>
+    </div>
+    ${leaveListCard(list, edit)}`;
+  }
+  function leaveListCard(all, edit) {
+    const list = ui.lvWho ? all.filter(l => l.pid === ui.lvWho) : all;
+    const hrs = l => E.leaveHours(st, l);
+    const row = (l, showName) => `<tr class="${edit === l.id ? 'sel' : ''}">${showName ? `<td><span class="tag ${person(l.pid)?.role === '조장' ? 'j' : 'g'}">${person(l.pid)?.role || ''}</span> ${h(person(l.pid)?.name)}</td>` : ''}<td><span class="tag k-${l.kind}">${l.kind}</span></td>
+      <td>${l.mode === 'day' ? `${l.from} ~ ${l.to} <span class="hint">(근무 전체)</span>` : `${l.start.replace('T', ' ')} ~ ${l.end.replace('T', ' ')}`}</td><td class="num">${r1(hrs(l))}${l.hours !== null && l.hours !== '' && l.hours !== undefined ? ' <span class="hint">(직접)</span>' : ''}</td><td>${h(l.memo)}</td>
+      <td class="num"><button class="btn sm ghost" data-ledit="${l.id}">수정</button><button class="btn sm ghost danger" data-ldel="${l.id}">삭제</button></td></tr>`;
+    const group = ui.lvGroup === 'name';
+    const who = new Set(all.map(l => l.pid));
+    const ppl = st.people.filter(p => who.has(p.id)).sort((a, b) => (a.role === b.role ? 0 : a.role === '조장' ? -1 : 1) || (a.order || 99) - (b.order || 99));
+    const controls = `<div class="row" style="gap:10px;align-items:center">
+      <div class="seg"><button data-lvg="date" class="${group ? '' : 'on'}">날짜순</button><button data-lvg="name" class="${group ? 'on' : ''}">이름별</button></div>
+      ${isStaff() ? '' : `<select id="lvWho" style="border:1px solid var(--line2);border-radius:6px;padding:6px 8px"><option value="">모든 사람</option>${ppl.map(p => `<option value="${p.id}" ${ui.lvWho === p.id ? 'selected' : ''}>${h(p.name)}</option>`).join('')}</select>`}
+      <label class="hint"><input type="checkbox" data-act="leaveAll" ${ui.leaveAll ? 'checked' : ''}> 전체 기간 보기</label></div>`;
+    let body;
+    if (!list.length) body = '<div class="empty">등록된 휴가가 없습니다.</div>';
+    else if (!group) body = `<table class="t"><thead><tr><th>이름</th><th>종류</th><th>기간</th><th class="num">차감시간</th><th>메모</th><th></th></tr></thead><tbody>${list.map(l => row(l, true)).join('')}</tbody></table>`;
+    else body = ppl.filter(p => list.some(l => l.pid === p.id)).map(p => {
+      const ls = list.filter(l => l.pid === p.id).sort((x, y) => (x.start || x.from).localeCompare(y.start || y.from));
+      const f0 = E.dn(`${st.ui.y}-${pad(st.ui.m)}-01`), f1 = f0 + E.ymDays(st.ui.y, st.ui.m) - 1;
+      const mh = l => ui.leaveAll ? hrs(l) : E.leaveHours(st, l, f0, f1);
+      const byK = {}; ls.forEach(l => byK[l.kind] = (byK[l.kind] || 0) + mh(l));
+      const tot = Object.values(byK).reduce((x, y) => x + y, 0);
+      return `<div style="margin-top:14px"><div class="row" style="align-items:center;gap:8px;padding:8px 10px;background:#f7f8fa;border-radius:6px"><span class="tag ${p.role === '조장' ? 'j' : 'g'}">${p.role}</span><b style="font-size:14.5px">${h(p.name)}</b><span class="hint">${ls.length}건 · ${ui.leaveAll ? '전체' : st.ui.m + '월'} 차감 ${r1(tot)}시간</span><span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${Object.keys(byK).filter(k => byK[k] > 0).map(k => `<span class="tag k-${k}">${k} ${r1(byK[k])}h</span>`).join('')}</span></div>
+        <table class="t"><thead><tr><th>종류</th><th>기간</th><th class="num">차감시간</th><th>메모</th><th></th></tr></thead><tbody>${ls.map(l => row(l, false)).join('')}</tbody></table></div>`;
+    }).join('');
+    return `<div class="card"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">${ui.leaveAll ? '전체 휴가' : `${st.ui.m}월 관련 휴가`} (${list.length}건)</h3>${controls}</div>${body}</div>`;
+  }
+  function readForm(sel) { const o = {}; document.querySelectorAll(sel + ' [name]').forEach(el => o[el.name] = el.type === 'checkbox' ? el.checked : el.value); return o; }
+
+  function importCard() {
+    const I = ui.imp;
+    const head = `<div class="row" style="justify-content:space-between;align-items:center"><div><h3 style="margin:0 0 4px">📥 인사시스템 휴가 엑셀 가져오기</h3><p class="hint" style="margin:0">연가·병가·공가·특별휴가 내려받은 파일(.xls)을 <b>여러 개 한꺼번에</b> 고르면 됩니다. 조장·관제요원 파일 모두 됩니다.</p></div><label class="btn pri">엑셀 파일 고르기<input type="file" id="impFile" accept=".xls,.xlsx" multiple hidden></label></div>`;
+    if (!I) return `<div class="card">${head}</div>`;
+    const P = I.planned, nCk = P.filter(o => o.checked).length;
+    const act = o => o.action === 'add' ? '<span class="tag" style="background:var(--acc-soft);color:var(--acc)">추가</span>' : o.action === 'delete' ? '<span class="tag" style="background:var(--red-soft);color:var(--red)">삭제</span>' : '<span class="tag">제외</span>';
+    const rows = P.map((o, i) => `<tr style="${o.checked ? '' : 'color:var(--ink3)'}"><td class="c"><input type="checkbox" data-impck="${i}" ${o.checked ? 'checked' : ''} ${o.action === 'none' ? 'disabled' : ''}></td><td>${act(o)}</td><td><span class="tag k-${o.kind}">${o.kind}</span></td><td><b>${h(o.name)}</b></td><td style="white-space:nowrap">${h((o.start || o.rawStart).replace('T', ' '))} ~ ${h((o.end || o.rawEnd).replace('T', ' '))}</td><td class="num">${o.hours != null ? r1(o.hours) : ''}</td><td>${h(LeaveImport.memoOf(o))}</td><td>${h(o.status)}</td><td style="color:${o.notes.length ? 'var(--org)' : 'inherit'}">${h(o.notes.join(' / '))}</td></tr>`).join('');
+    return `<div class="card">${head}
+      ${I.errors.length ? `<div class="preview err" style="margin-top:12px">${I.errors.map(h).join('<br>')}</div>` : ''}
+      <div class="preview" style="margin-top:12px">${I.files}개 파일에서 <b>${P.length}건</b>을 읽었습니다. 체크된 <b>${nCk}건</b>이 반영됩니다. 결재 진행 중·겹침·취소 건은 체크가 빠져 있으니 확인 후 직접 체크하세요.</div>
+      <div style="max-height:460px;overflow:auto;margin-top:10px"><table class="t inbox"><thead><tr><th class="c">반영</th><th>처리</th><th>종류</th><th>이름</th><th>기간</th><th class="num">차감</th><th>구분·사유</th><th>결재</th><th>확인</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" data-act="impApply">선택한 ${nCk}건 반영</button><button class="btn" data-act="impCancel">취소</button><span class="hint">같은 파일을 다시 가져와도 이미 등록된 휴가는 건너뜁니다. 인사시스템에서 취소된 휴가는 '삭제'로 표시됩니다.</span></div></div>`;
+  }
+  async function importFiles(files) {
+    const errors = []; let items = [];
+    for (const f of files) {
+      try { const rows = await XlsRead.read(await f.arrayBuffer()); const r = LeaveImport.parse(rows, f.name); if (r.error) errors.push(r.error); items = items.concat(r.items); }
+      catch (e) { errors.push(`${f.name}: ${e.message || e}`); }
+    }
+    items.sort((x, y) => String(x.start || x.rawStart).localeCompare(String(y.start || y.rawStart)) || x.name.localeCompare(y.name));
+    ui.imp = { files: files.length, errors, planned: LeaveImport.plan(st, items) };
+    render();
+  }
+
+  // ---------- 근무자 변경 ----------
+  function chDraftDefault() { const { y, m } = ym(); return { date: `${y}-${pad(m)}-01`, shift: '오전', fromId: '', toId: '', memo: '' }; }
+  function membersExcluding(date, shift, exId) {
+    const saved = st.changes; st.changes = st.changes.filter(c => c.id !== exId);
+    const list = E.actualShift(st, E.dn(date), shift); st.changes = saved; return list;
+  }
+  function vChange(R) {
+    const d = ui.chDraft || (ui.chDraft = chDraftDefault());
+    const role = E.SHIFTS[d.shift].role;
+    const mem = d.date ? membersExcluding(d.date, d.shift, ui.chEdit) : [];
+    if (d.fromId && mem.indexOf(d.fromId) < 0) d.fromId = '';
+    const after = mem.slice(); const fi = d.fromId ? after.indexOf(d.fromId) : -1; if (fi >= 0) after.splice(fi, 1); if (d.toId && after.indexOf(d.toId) < 0) after.splice(fi >= 0 ? fi : after.length, 0, d.toId);
+    const list = st.changes.filter(c => E.dn(c.date) >= R.calStart && E.dn(c.date) <= R.last).sort((a, b) => a.date.localeCompare(b.date) || E.SHIFT_ORDER.indexOf(a.shift) - E.SHIFT_ORDER.indexOf(b.shift));
+    const nm = ids => ids.map(i => h(person(i)?.name)).join('·') || '없음';
+    return `<h2>근무자 변경</h2><p class="sub">날짜와 근무를 고르면 원래 근무자가 목록에 나옵니다. 거기서 빠지는 사람과 대신 들어가는 사람만 고르면 됩니다. (같은 근무의 다른 사람은 그대로 유지)</p>
+    ${alertBox(R)}
+    <div class="card" id="chForm"><h3>${ui.chEdit ? '변경 수정' : '새 근무 변경'}</h3>
+      <div class="row">
+        <div class="fld"><label>날짜</label><input type="date" name="date" value="${d.date}"></div>
+        <div class="fld"><label>근무</label><select name="shift">${E.SHIFT_ORDER.map(k => `<option value="${k}" ${d.shift === k ? 'selected' : ''}>${k} (${E.SHIFTS[k].role} ${pad(E.SHIFTS[k].s / 60)}~${pad(E.SHIFTS[k].e / 60 % 24)}시)</option>`).join('')}</select></div>
+        <div class="fld"><label>빠지는 사람 (변경 전)</label><select name="fromId"><option value="">(없음 · 인원 추가 투입)</option>${mem.map(i => `<option value="${i}" ${d.fromId === i ? 'selected' : ''}>${h(person(i)?.name)}</option>`).join('')}</select></div>
+        <div class="fld"><label>대신 근무 (변경 후)</label>${personSelect('toId', d.toId, role, '(없음 · 인원 빼기)')}</div>
+        <div class="fld" style="flex:1;min-width:160px"><label>메모</label><input name="memo" value="${h(d.memo)}"></div>
+      </div>
+      <div class="preview">원래 근무: <b>${nm(mem)}</b> → 변경 후: <b>${nm(after)}</b></div>
+      <div class="row" style="margin-top:12px"><button class="btn pri" data-act="chSave">${ui.chEdit ? '수정 저장' : '변경 등록'}</button>${ui.chEdit ? '<button class="btn" data-act="chCancel">취소</button>' : ''}<span class="hint">휴가자를 빼고 다른 사람을 넣는 경우, 휴가는 '휴가 입력'에도 따로 등록해 두세요(복무규정 제외시간 집계용).</span></div>
+    </div>
+    <div class="card"><h3>${st.ui.m}월 근무 변경 (${list.length}건)</h3>
+    ${list.length ? `<table class="t"><thead><tr><th>날짜</th><th>근무</th><th>변경 전</th><th></th><th>변경 후</th><th>메모</th><th></th></tr></thead><tbody>
+    ${list.map(c => { const bad = R.warn.some(w => w.id === c.id); return `<tr class="${ui.chEdit === c.id ? 'sel' : ''}"><td>${c.date} (${E.DOW_KO[E.dow(E.dn(c.date))]})</td><td>${c.shift}</td><td>${c.fromId ? h(person(c.fromId)?.name) : '<span class="hint">추가 투입</span>'}${bad ? ' <span class="tag" style="background:var(--org-soft);color:var(--org)">원래 근무자 아님</span>' : ''}</td><td>→</td><td><b>${c.toId ? h(person(c.toId)?.name) : '<span class="hint">빼기</span>'}</b></td><td>${h(c.memo)}</td>
+      <td class="num"><button class="btn sm ghost" data-cedit="${c.id}">수정</button><button class="btn sm ghost danger" data-cdel="${c.id}">삭제</button></td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">이 달에 등록된 근무 변경이 없습니다.</div>'}</div>`;
+  }
+
+  // ---------- 추가근무 ----------
+  function vExtra(R) {
+    const { y, m } = ym();
+    const d = ui.exDraft || (ui.exDraft = { date: `${y}-${pad(m)}-01`, pid: '', hours: '', memo: '' });
+    const p = person(d.pid);
+    const list = st.extras.filter(x => E.dn(x.date) >= R.first && E.dn(x.date) <= R.last).sort((a, b) => a.date.localeCompare(b.date));
+    return `<h2>추가근무 · 미체크 초과</h2><p class="sub">정규 근무 외에 더 일한 시간을 넣습니다. 관제요원은 시간외(주초과) 시간에 더해지고, 조장은 '미체크 초과'로 조장수당내역·청원경찰 초과근무내역에 반영됩니다.</p>
+    <div class="card" id="exForm"><h3>${ui.exEdit ? '추가근무 수정' : '새 추가근무 등록'}</h3>
+      <div class="row">
+        <div class="fld"><label>날짜</label><input type="date" name="date" value="${d.date}"></div>
+        <div class="fld"><label>이름</label>${personSelect('pid', d.pid)}</div>
+        <div class="fld" style="width:110px"><label>시간</label><input type="number" name="hours" min="0" step="0.5" value="${d.hours}"></div>
+        <div class="fld" style="flex:1;min-width:200px"><label>사유 (출력물에 표시)</label><input name="memo" value="${h(d.memo)}" placeholder="예: 9/15 조기출근 2시간"></div>
+      </div>
+      ${p ? `<div class="preview">${p.role === '관제' ? '관제요원: 시간외근무 시간에 그대로 더해집니다.' : '조장: 미체크 초과근무로 초과근무시간에 더해지고, 사유가 청원경찰 초과근무내역의 미체크 사유란에 표시됩니다.'}</div>` : ''}
+      <div class="row" style="margin-top:12px"><button class="btn pri" data-act="exSave">${ui.exEdit ? '수정 저장' : '등록'}</button>${ui.exEdit ? '<button class="btn" data-act="exCancel">취소</button>' : ''}</div>
+    </div>
+    <div class="card"><h3>${m}월 추가근무 (${list.length}건)</h3>
+    ${list.length ? `<table class="t"><thead><tr><th>날짜</th><th>이름</th><th class="num">시간</th><th>사유</th><th></th></tr></thead><tbody>
+    ${list.map(x => `<tr class="${ui.exEdit === x.id ? 'sel' : ''}"><td>${x.date}</td><td><span class="tag ${person(x.pid)?.role === '조장' ? 'j' : 'g'}">${person(x.pid)?.role || ''}</span> ${h(person(x.pid)?.name)}</td><td class="num">${x.hours}</td><td>${h(x.memo)}</td><td class="num"><button class="btn sm ghost" data-xedit="${x.id}">수정</button><button class="btn sm ghost danger" data-xdel="${x.id}">삭제</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">이 달에 등록된 추가근무가 없습니다.</div>'}</div>`;
+  }
+
+  // ---------- 결과 ----------
+  function vResult(R) {
+    if (ui.only && !st.people.some(p => p.id === ui.only)) ui.only = '';
+    const mine = p => isStaff() ? p.id === me() : (!ui.only || p.id === ui.only);
+    if (!isStaff() && ui.only) ui.sel = ui.only;
+    if (isStaff()) { ui.sel = me(); if (!me()) return `<h2>내 수당</h2><div class="card"><div class="empty">이 아이디가 인원과 연결되어 있지 않습니다.<br>총괄 담당자에게 '인원·설정 → 로그인 아이디' 연결을 요청하세요.</div></div>`; }
+    const G = st.people.filter(p => p.role === '관제' && R.persons[p.id] && mine(p)).sort((a, b) => (a.order || 99) - (b.order || 99));
+    const J = st.people.filter(p => p.role === '조장' && R.persons[p.id] && mine(p));
+    const tot = G.reduce((a, p) => { const o = R.persons[p.id]; a.ot += o.pay.ot; a.n += o.pay.night; a.h += o.pay.hol; a.t += o.pay.total; return a; }, { ot: 0, n: 0, h: 0, t: 0 });
+    const sel = ui.sel && R.persons[ui.sel] ? R.persons[ui.sel] : null;
+    const pick = isStaff() ? '' : `<div class="row noprint" style="margin-bottom:14px;align-items:center"><div class="fld" style="min-width:220px"><label>보기</label><select id="onlySel"><option value="">전체 보기</option><optgroup label="관제요원">${st.people.filter(p => p.role === '관제').sort((a, b) => (a.order || 99) - (b.order || 99)).map(p => `<option value="${p.id}" ${ui.only === p.id ? 'selected' : ''}>${h(p.name)}</option>`).join('')}</optgroup><optgroup label="조장">${st.people.filter(p => p.role === '조장').map(p => `<option value="${p.id}" ${ui.only === p.id ? 'selected' : ''}>${h(p.name)}</option>`).join('')}</optgroup></select></div>${ui.only ? '<button class="btn" data-act="onlyAll" style="align-self:flex-end">전체 보기로 돌아가기</button>' : ''}</div>`;
+    return `<h2>수당 결과</h2><p class="sub">${st.ui.y}년 ${st.ui.m}월 · 복무규정 근무일수 ${R.dutyDays}일 · ${ui.only ? `<b>${h(person(ui.only)?.name)}</b> 한 사람만 보는 중` : '이름을 고르면 그 사람 것만 볼 수 있습니다.'}</p>${pick}
+    ${alertBox(R)}
+    ${isStaff() || ui.only ? '' : `<div class="kpis"><div class="kpi"><span>관제요원 지급 합계</span><b>${won(tot.t)}원</b></div><div class="kpi"><span>시간외수당</span><b>${won(tot.ot)}원</b></div><div class="kpi"><span>야간수당</span><b>${won(tot.n)}원</b></div><div class="kpi"><span>휴일수당</span><b>${won(tot.h)}원</b></div></div>`}
+    <div class="split"><div>
+    ${G.length ? '' : '<!--'}<div class="card"><h3>관제요원</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">근무일수</th><th class="num">총근무</th><th class="num">주초과</th><th class="num">추가</th><th class="num">야간</th><th class="num">휴일</th><th class="num">시간외수당</th><th class="num">야간수당</th><th class="num">휴일수당</th><th class="num">합계</th></tr></thead><tbody>
+    ${G.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.workDays}</td><td class="num">${r1(o.total)}</td><td class="num">${r1(o.weekOver)}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num">${r1(o.night)}</td><td class="num">${r1(o.hol)}</td><td class="num">${won(o.pay.ot)}</td><td class="num">${won(o.pay.night)}</td><td class="num">${won(o.pay.hol)}</td><td class="num"><b>${won(o.pay.total)}</b></td></tr>`; }).join('')}
+    ${isStaff() || ui.only ? '' : `<tr class="total"><td>합계</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">${won(tot.ot)}</td><td class="num">${won(tot.n)}</td><td class="num">${won(tot.h)}</td><td class="num">${won(tot.t)}</td></tr>`}</tbody></table></div>${G.length ? '' : '-->'}
+    ${J.length ? '' : '<!--'}<div class="card"><h3>조장 (청원경찰)</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">주간</th><th class="num">야간</th><th class="num">휴일일수</th><th class="num">실제근무①</th><th class="num">복무규정②</th><th class="num">휴일지급③</th><th class="num">미체크</th><th class="num">초과근무</th><th class="num">야간시간</th><th class="num">휴가 제외</th></tr></thead><tbody>
+    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.dayCnt}</td><td class="num">${o.nightCnt}</td><td class="num">${o.holDays}</td><td class="num">${r1(o.actual)}</td><td class="num">${r1(o.duty)}</td><td class="num">${o.holPay}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num"><b>${r1(o.overtimeJ)}</b></td><td class="num">${r1(o.nightH)}</td><td class="num">${r1(o.leaveTotal) || ''}</td></tr>`; }).join('')}
+    </tbody></table><p class="hint" style="margin:10px 0 0">초과근무 = max(0, ①−②−③) + 미체크 초과. ② = 복무규정 근무일수×8 − 휴가시간.</p></div>${J.length ? '' : '-->'}
+    </div><div class="drawer">${sel ? personDetail(R, sel) : '<div class="card"><div class="empty">왼쪽 표에서 사람을 고르면<br>날짜별 근무시간·야간·휴일·휴가 차감 내역이 나옵니다.</div></div>'}</div></div>`;
+  }
+  function personDetail(R, o) {
+    const p = o.p;
+    const rows = o.shifts.map(sh => {
+      const d = R.days.find(x => x.n === sh.n);
+      const hol = o.daily[sh.n].kinds[0] === sh.kind ? o.daily[sh.n].hol : 0;
+      return `<tr><td>${E.ds(sh.n).slice(5).replace('-', '/')}(${E.DOW_KO[E.dow(sh.n)]})${d && d.hol ? ' <span style="color:var(--red)">●</span>' : ''}</td><td style="text-align:left">${sh.kind}${sh.changed ? ' <span class="tag" style="background:var(--blue-soft);color:var(--blue)">변경</span>' : ''}</td><td>${r1(sh.worked)}</td><td>${r1(sh.night) || ''}</td><td>${r1(hol) || ''}</td><td style="color:var(--red)">${sh.leave ? '-' + r1(sh.leave) : ''}</td></tr>`;
+    }).join('');
+    const wk = o.weeks.map((w, i) => `<tr><td>${i + 1}주 ${E.ds(w.start).slice(5).replace('-', '/')}~</td><td>${r1(w.sum)}</td><td>${w.over ? '<b>' + r1(w.over) + '</b>' : '0'}</td></tr>`).join('');
+    return `<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">${h(p.name)} <span class="tag ${p.role === '조장' ? 'j' : 'g'}">${p.role} ${p.team}조</span></h3><button class="btn sm ghost" data-sel="">닫기</button></div>
+      <table class="mini" style="margin-top:10px"><thead><tr><th>날짜</th><th style="text-align:left">근무</th><th>시간</th><th>야간</th><th>휴일</th><th>휴가</th></tr></thead><tbody>${rows}
+      ${o.extras.map(x => `<tr><td>${x.date.slice(5).replace('-', '/')}</td><td style="text-align:left;color:var(--acc)">추가근무</td><td>${x.hours}</td><td></td><td></td><td></td></tr>`).join('')}</tbody></table>
+      <h3 style="margin:16px 0 6px">주별 근무 (40시간 초과분)</h3><table class="mini"><thead><tr><th>주</th><th>합계</th><th>초과</th></tr></thead><tbody>${wk}</tbody></table>
+      <p class="hint" style="margin-top:8px">1주차는 전월 말일까지 포함, 마지막 주는 이달 날짜만 합산합니다.</p></div>`;
+  }
+
+  // ---------- 출력 양식 ----------
+  function sheetHtml(sh) {
+    const skip = {}, span = {};
+    for (const m of sh.merges || []) {
+      const [a, b] = m.split(':'); const p = s => { const mm = s.match(/([A-Z]+)(\d+)/); let c = 0; for (const ch of mm[1]) c = c * 26 + ch.charCodeAt(0) - 64; return [Number(mm[2]) - 1, c - 1]; };
+      const [r0, c0] = p(a), [r1_, c1] = p(b);
+      span[r0 + ',' + c0] = [r1_ - r0 + 1, c1 - c0 + 1];
+      for (let r = r0; r <= r1_; r++) for (let c = c0; c <= c1; c++) if (r !== r0 || c !== c0) skip[r + ',' + c] = 1;
+    }
+    const nc = Math.max(...sh.rows.map(r => (r || []).length));
+    const colsW = (sh.cols || []).map(w => `<col style="width:${Math.round((w || 8) * 8.6)}px">`).join('');
+    let html = `<table class="x"><colgroup>${colsW}</colgroup>`;
+    sh.rows.forEach((row, r) => {
+      const ht = sh.heights && sh.heights[r + 1];
+      html += `<tr style="${ht ? `height:${Math.round(ht * 1.25)}px` : ''}">`;
+      for (let c = 0; c < nc; c++) {
+        if (skip[r + ',' + c]) continue;
+        let x = (row || [])[c]; if (x === undefined || x === null) { html += '<td></td>'; continue; }
+        if (typeof x !== 'object') x = { v: x };
+        const s = x.s || {}; const sp = span[r + ',' + c];
+        let v = x.v; if (typeof v === 'number' && s.num === '#,##0') v = v.toLocaleString('ko-KR');
+        const style = [`text-align:${s.h || (typeof x.v === 'number' ? 'right' : 'left')}`, `vertical-align:${s.v === 'top' ? 'top' : 'middle'}`, s.b ? 'font-weight:700' : '', s.sz ? `font-size:${Math.round(s.sz * 1.15)}px` : '', s.color ? `color:#${s.color}` : '', s.fill ? `background:#${s.fill}` : ''].filter(Boolean).join(';');
+        html += `<td class="${s.border ? 'b' : ''}" style="${style}"${sp ? ` rowspan="${sp[0]}" colspan="${sp[1]}"` : ''}>${h(v == null ? '' : v)}</td>`;
+      }
+      html += '</tr>';
+    });
+    return html + '</table>';
+  }
+  function vForms(R) {
+    const f = RP.FORMS.find(x => x.key === ui.form) || RP.FORMS[0];
+    const sh = f.fn(st, R);
+    return `<h2>출력 양식</h2><p class="sub">아래 미리보기와 같은 내용으로 엑셀 파일이 만들어집니다. 엑셀에서 숫자를 고치면 금액 칸(수식)은 다시 계산됩니다.</p>
+    ${alertBox(R)}
+    <div class="row noprint" style="margin-bottom:12px"><button class="btn pri" data-act="xlsx">⬇ 엑셀 내보내기 (양식 전체)</button><button class="btn" data-act="print">🖨 이 양식 인쇄</button><span class="hint">엑셀 파일에는 양식 5종 + 수당계산·일별상세·휴가·근무변경·추가근무 목록 시트가 들어갑니다.</span></div>
+    <div class="tabs">${RP.FORMS.map(x => `<button data-form="${x.key}" class="${x.key === f.key ? 'on' : ''}">${x.label}</button>`).join('')}</div>
+    <div class="paper">${sheetHtml(sh)}</div>`;
+  }
+  function exportXlsx() {
+    const R = compute();
+    const bytes = XLSX.build(RP.allSheets(st, R));
+    download(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${st.settings.org}_근무수당_${R.y}년${R.m}월.xlsx`);
+    toast('엑셀 파일을 내려받았습니다.');
+  }
+  function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+
+  // ---------- 설정 ----------
+  function vSettings(R) {
+    const key = `${st.ui.y}-${pad(st.ui.m)}`;
+    const ov = st.settings.dutyDays[key];
+    const hol = st.holidays.slice().sort((a, b) => a.date.localeCompare(b.date));
+    return `<h2>인원 · 설정</h2><p class="sub">이름·조·단가를 바꾸면 모든 계산과 출력물에 바로 반영됩니다. 칸을 누르고 고친 뒤 다른 곳을 누르면 저장됩니다.</p>
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">인원</h3><div class="row"><button class="btn sm" data-act="addP" data-role="조장">＋ 조장 추가</button><button class="btn sm" data-act="addP" data-role="관제">＋ 관제요원 추가</button></div></div>
+    <table class="t edit"><thead><tr><th>구분</th><th>이름</th><th>조</th><th>직급</th><th class="num">시간외 단가</th><th class="num">야간 단가</th><th class="num">휴일 단가</th><th class="num">출력 순번</th><th>로그인 아이디</th><th>근무 시작일</th><th>근무 종료일</th><th></th></tr></thead><tbody>
+    ${st.people.map(p => `<tr data-pid="${p.id}"><td><span class="tag ${p.role === '조장' ? 'j' : 'g'}">${p.role}</span></td><td><input data-pf="name" value="${h(p.name)}"></td><td><select data-pf="team">${[1, 2, 3, 4].map(t => `<option ${Number(p.team) === t ? 'selected' : ''} value="${t}">${t}조</option>`).join('')}</select></td><td><input data-pf="grade" value="${h(p.grade || '')}"></td>
+      <td><input data-pf="otRate" type="number" value="${p.otRate || 0}" style="text-align:right"></td><td><input data-pf="nightRate" type="number" value="${p.nightRate || 0}" style="text-align:right"></td><td><input data-pf="holRate" type="number" value="${p.holRate || 0}" style="text-align:right"></td><td><input data-pf="order" type="number" value="${p.order || ''}" style="text-align:right;width:60px"></td><td><input data-pf="loginId" value="${h(p.loginId || '')}" placeholder="없음" style="width:100px"></td>
+      <td><input data-pf="start" type="date" value="${p.start || ''}"></td><td><input data-pf="end" type="date" value="${p.end || ''}"></td><td><button class="btn sm ghost danger" data-pdel="${p.id}">삭제</button></td></tr>`).join('')}</tbody></table>
+    <p class="hint" style="margin:10px 0 0">근무 순환: 조장 4조 2교대(주간 08~20 / 야간 20~08, 1조→4조→2조→3조), 관제 4조 3교대 8일 주기(새벽→비번→오전→오전→오후→오후→비번→새벽). 같은 조에 두 명이면 함께 근무합니다. 조장은 단가 0이면 수당은 조장수당내역(시간)으로만 산출됩니다.</p></div>
+    <div class="row" style="align-items:stretch">
+    <div class="card" style="flex:1;min-width:320px"><h3>기본 설정</h3><div class="row" id="setForm">
+      <div class="fld"><label>소속</label><input data-sf="org" value="${h(st.settings.org)}"></div>
+      <div class="fld"><label>근무명령 제목</label><input data-sf="title" value="${h(st.settings.title)}"></div>
+      <div class="fld" style="min-width:220px"><label>확인자</label><input data-sf="approver" value="${h(st.settings.approver)}"></div>
+      <div class="fld"><label>순환 기준일</label><input type="date" data-sf="baseDate" value="${st.settings.baseDate}"></div>
+      <div class="fld"><label>${st.ui.m}월 복무규정 근무일수</label><input type="number" data-duty="${key}" value="${ov == null ? '' : ov}" placeholder="자동 ${R.dutyAuto}일"></div>
+    </div><p class="hint">복무규정 근무일수는 평일 수에서 공휴일을 뺀 값이 자동으로 들어갑니다. 다르면 직접 입력하세요.</p></div>
+    ${syncCard()}
+    <div class="card" style="flex:1;min-width:320px"><h3>데이터 보관</h3>
+      <p class="hint" style="margin-top:0">입력한 내용은 이 PC의 이 브라우저에 자동 저장됩니다. PC를 바꾸거나 브라우저 기록을 지우면 사라질 수 있으니 매달 마감 후 백업 파일을 저장해 두세요.</p>
+      <div class="row"><button class="btn pri" data-act="backup">백업 파일 저장</button><label class="btn">백업 파일 불러오기<input type="file" accept=".json" id="restore" hidden></label><button class="btn ghost danger" data-act="reset">처음 상태로 초기화</button></div></div>
+    </div>
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">공휴일 (${hol.length}일)</h3><div class="row" id="holForm"><input type="date" name="date" class="fld" style="border:1px solid var(--line2);border-radius:6px;padding:6px"><input name="name" placeholder="공휴일 이름" style="border:1px solid var(--line2);border-radius:6px;padding:6px"><button class="btn sm pri" data-act="addHol">추가</button></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${hol.map(x => `<span class="tag" style="padding:5px 10px;font-size:12.5px">${x.date} ${h(x.name)} <a href="#" data-hdel="${x.date}" style="color:var(--red);margin-left:4px;text-decoration:none">✕</a></span>`).join('')}</div>
+    <p class="hint">관제요원은 공휴일 근무만 휴일수당 대상(토·일 제외), 조장은 토·일·공휴일 근무 모두 휴일(하루 최대 8시간)로 계산합니다. 대체공휴일도 여기에 넣어 주세요.</p></div>`;
+  }
+
+  function whoName(id) { if (!id) return '-'; const p = st.people.find(x => x.loginId && x.loginId === id); return p ? `${p.name}(${id})` : id; }
+  function logTable() {
+    const log = (st.log || []).slice(-12).reverse();
+    return log.length ? `<h3 style="margin:16px 0 6px">최근 변경 기록</h3><table class="mini"><tbody>${log.map(l => `<tr><td style="white-space:nowrap">${new Date(l.t).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td><td style="text-align:left;white-space:nowrap">${h(whoName(l.seat))}</td><td style="text-align:left">${h(l.msg)}</td></tr>`).join('')}</tbody></table>` : '';
+  }
+  function syncCard() {
+    const F = FireSync.S, S = Sync.S;
+    const seatFld = `<div class="fld" style="max-width:260px;margin-bottom:12px"><label>이 자리 이름 <span style="font-weight:400;color:var(--ink3)">(예: 관제요원, 조장 · 변경 기록에 표시)</span></label><input data-seat value="${h(seat())}" placeholder="예: 관제요원, 조장"></div>`;
+    let body;
+    if (F.linked) {
+      body = F.needLogin ? `<div class="preview">공유 데이터(${h(F.name)})에 연결하려면 로그인하세요. </div>
+        <div class="row" id="fbLogin" style="margin-top:10px"><div class="fld"><label>아이디</label><input name="email" autocomplete="username" placeholder="예: kanghee"></div><div class="fld"><label>비밀번호</label><input name="pw" type="password" autocomplete="current-password"></div><button class="btn pri" data-act="fbLogin">로그인</button><button class="btn ghost danger" data-act="fbOff">연결 설정 지우기</button></div>`
+        : `<div class="preview">${F.error ? `<span style="color:var(--red)">${h(F.error)}</span>` : `<b style="color:var(--acc)">● 인터넷 공유 중</b> · ${h(F.name)} · ${h(F.user)} · 마지막 동기화 ${F.lastSync ? F.lastSync.toLocaleTimeString('ko-KR') : '-'}`}</div>
+        <div class="row" style="margin-top:10px"><button class="btn" data-act="fbLogout">로그아웃</button>${isStaff() ? '' : '<button class="btn ghost danger" data-act="fbOff">공유 연결 끊기</button>'}</div>
+        ${F.role === 'admin' ? `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)"><h3 style="margin:0 0 6px">개인 아이디 나눠 주기</h3>
+          <ol class="hint" style="padding-left:18px;line-height:1.9;margin:0 0 10px"><li>Firebase 콘솔 → Authentication → 사용자 추가: <b>아이디@shiftpay.local</b> + 비밀번호</li><li>위 인원 표의 <b>로그인 아이디</b> 칸에 같은 아이디를 적습니다 (그 사람 본인 수당만 보이게 연결).</li><li><b>다른 PC용 설치 파일 만들기</b>로 받은 파일을 다른 PC(총괄 본인의 다른 자리 포함)와 직원들에게 나눠 줍니다. Firebase 설정이 들어 있어서 아이디·비밀번호만 넣으면 됩니다.</li><li>아래 <b>보안 규칙</b>을 Realtime Database → 규칙에 붙여넣고 게시합니다. (단가·인원 수정은 총괄만, 단가는 본인 것만 읽기)</li></ol>
+          <div class="row"><button class="btn pri" data-act="staffFile">⬇ 다른 PC용 설치 파일 만들기</button><button class="btn" data-act="copyRules">보안 규칙 복사</button></div>
+          <details style="margin-top:10px"><summary class="hint" style="cursor:pointer">보안 규칙 보기</summary><pre id="rulesTxt" style="background:#f4f5f7;padding:10px;border-radius:6px;font-size:11.5px;overflow:auto;max-height:260px">${h(FireSync.rulesText(F.user))}</pre></details></div>` : ''}`;
+    } else if (S.linked) {
+      body = `<div class="preview">${S.needPerm ? '파일 권한 확인이 필요합니다. 오른쪽 위 <b>공유 파일 다시 연결</b>을 눌러 주세요.' : S.error ? `<span style="color:var(--red)">${h(S.error)}</span>` : `<b style="color:var(--acc)">● 공유폴더 파일 공유 중</b> · ${h(S.name)}`}</div>
+        <div class="row" style="margin-top:10px">${S.needPerm ? '<button class="btn acc" data-act="syncRe">다시 연결</button>' : '<button class="btn" data-act="syncNow">지금 동기화</button>'}<button class="btn ghost danger" data-act="syncOff">연결 끊기</button></div>`;
+    } else {
+      const mode = ui.syncMode || 'fb';
+      body = `<div class="seg" style="margin-bottom:12px"><button data-smode="fb" class="${mode === 'fb' ? 'on' : ''}">인터넷 (Firebase)</button><button data-smode="file" class="${mode === 'file' ? 'on' : ''}">공유폴더 파일</button></div>` + (mode === 'fb' ? `
+        <p class="hint" style="margin-top:0"><b>Firebase 실시간 DB</b>(근무수당 전용 프로젝트)에 데이터를 두고, 로그인한 자리끼리 실시간으로 함께 씁니다. 로그인하지 않으면 읽을 수도 없게 규칙을 걸어 둡니다.</p>
+        <div id="fbForm"><div class="fld" style="margin-bottom:10px"><label>Firebase 설정 (콘솔의 firebaseConfig 그대로 붙여넣기)</label><textarea name="cfg" rows="6" style="font-family:Consolas,monospace;font-size:12px" placeholder="← 여기를 누르고 Ctrl+V로 붙여넣으세요.&#10;(Firebase 콘솔 → 프로젝트 설정 → 내 앱 → Config 에서 복사한&#10; const firebaseConfig = { ... }; 전체)"></textarea></div>
+        <div class="row"><div class="fld"><label>아이디</label><input name="email" autocomplete="username" placeholder="예: kanghee"></div><div class="fld"><label>비밀번호</label><input name="pw" type="password" autocomplete="current-password"></div><button class="btn pri" data-act="fbConnect">연결</button></div></div>
+        <details style="margin-top:12px"><summary class="hint" style="cursor:pointer"><b>처음 한 번 설정 방법 (펼치기)</b></summary><ol class="hint" style="padding-left:18px;line-height:1.9">
+          <li>Firebase 콘솔에서 근무수당 전용 프로젝트를 만들고, 프로젝트 설정 → 내 앱 → 웹 앱 추가 → <b>firebaseConfig</b>를 복사해 위 칸에 붙여넣습니다.</li>
+          <li>Realtime Database 만들기(위치: 싱가포르) → <b>규칙</b>에 아래를 넣고 게시합니다. <b>kanghee</b> 자리를 총괄 아이디로 바꾸세요. (연결 후에는 총괄 아이디가 채워진 규칙을 이 화면에서 복사할 수 있습니다)<pre style="background:#f4f5f7;padding:8px;border-radius:6px;font-size:11.5px;margin:6px 0;max-height:200px;overflow:auto">${h(FireSync.rulesText('kanghee'))}</pre></li>
+          <li>Authentication → 이메일/비밀번호 사용 설정 → 사용자 추가에서 이메일 칸에 <b>아이디@shiftpay.local</b> (예: kanghee@shiftpay.local)로 계정을 만듭니다. 프로그램에서는 <b>아이디만</b> 입력하면 됩니다. 실제 메일 주소가 아니어도 됩니다.</li>
+          <li><b>총괄 아이디로</b> 연결하면 "이 PC 내용을 올릴까요?"가 나옵니다 → 확인. 그다음 직원용 파일을 만들어 나눠 주면 됩니다.</li></ol></details>`
+      : (!Sync.supported ? `<div class="preview warn">이 브라우저는 공유 파일 기능을 지원하지 않습니다. Edge 또는 Chrome으로 열어 주세요.</div>` : `<p class="hint" style="margin-top:0">공유폴더(네트워크 드라이브)에 데이터 파일 하나를 두고 함께 씁니다.</p><div class="row"><button class="btn pri" data-act="syncCreate">공유 파일 새로 만들기</button><button class="btn" data-act="syncOpen">기존 공유 파일 연결</button></div>`));
+    }
+    return `<div class="card" style="flex:1.4;min-width:380px"><h3>여러 자리에서 함께 쓰기</h3>${S.linked || (!F.linked && ui.syncMode === 'file') ? seatFld : ''}${body}${(F.linked && !F.needLogin) || S.linked ? logTable() : ''}</div>`;
+  }
+
+  function vAccount() {
+    return `<h2>내 계정</h2><p class="sub">${h(FireSync.S.user)} 아이디로 로그인되어 있습니다.</p><div class="row" style="align-items:stretch">${syncCard()}</div>`;
+  }
+  function vLocked() {
+    return `<h2>로그인</h2><p class="sub">오른쪽 위 <b>🔑 로그인</b> 버튼이나 아래 칸에 아이디와 비밀번호를 넣으세요.</p><div class="row" style="align-items:stretch">${syncCard()}</div>`;
+  }
+  function vWelcome() {
+    const F = FireSync.S;
+    return `<h2>시작하기</h2><p class="sub">아직 이 PC에 근무 데이터가 없습니다.</p>
+    <div class="row" style="align-items:stretch">
+      ${F.linked || FireSync.embedded() ? '' : `<div class="card" style="flex:1;min-width:320px"><h3>총괄 담당자 (처음 한 번)</h3><p class="hint" style="margin-top:0">함께 받은 <b>초기데이터 파일(.json)</b>을 불러오면 9월 엑셀 자료(인원·단가·휴가·근무변경)가 들어갑니다.</p><label class="btn pri">초기데이터·백업 파일 불러오기<input type="file" accept=".json" id="restore" hidden></label></div>`}
+      ${syncCard()}
+    </div>`;
+  }
+
+  // ---------- 이벤트 ----------
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button,a,[data-sel],label input');
+    if (!e.target.closest('#pop') && !e.target.closest('[data-shift]')) closePop();
+    if (!t) return;
+    const ds = t.dataset;
+    if (ds.nav) { ui.view = ds.nav; closePop(); render(); window.scrollTo(0, 0); return; }
+    if (ds.mv) { let { y, m } = st.ui; m += Number(ds.mv); if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } st.ui = { y, m }; ui.leaveDraft = ui.chDraft = ui.exDraft = null; saveLocal(); render(); return; }
+    if (ds.shift) {
+      const [date, kind, pid] = ds.shift.split('|'); const p = person(pid); const tm = shiftTimes(date, kind);
+      const rc = t.getBoundingClientRect();
+      openPop(rc.left, rc.bottom, `<h4>${h(p.name)} · ${date.slice(5).replace('-', '/')} ${kind}</h4><p>${tm.start.slice(11)} ~ ${tm.end.slice(11)} (${p.role})</p>
+        <button class="btn" data-pact="leave" data-arg="${ds.shift}">✈ 이 근무에 휴가 등록</button>
+        <button class="btn" data-pact="swap" data-arg="${ds.shift}">⇄ 다른 사람이 대신 근무</button>
+        <button class="btn" data-pact="extra" data-arg="${ds.shift}">＋ 추가근무 등록</button>`);
+      return;
+    }
+    if (ds.addday) {
+      const rc = t.getBoundingClientRect();
+      openPop(rc.left - 200, rc.bottom, `<h4>${ds.addday.slice(5).replace('-', '/')} 입력</h4><p>이 날짜로 입력 화면을 엽니다.</p>
+        <button class="btn" data-pact="leaveD" data-arg="${ds.addday}">✈ 휴가 등록</button><button class="btn" data-pact="swapD" data-arg="${ds.addday}">⇄ 근무자 변경</button><button class="btn" data-pact="extraD" data-arg="${ds.addday}">＋ 추가근무</button>`);
+      return;
+    }
+    if (ds.pact) {
+      closePop();
+      const [date, kind, pid] = ds.arg.split('|');
+      if (ds.pact === 'leave') { const tm = shiftTimes(date, kind); ui.leaveEdit = null; ui.leaveDraft = { pid, kind: '연가', mode: 'time', from: date, to: date, start: tm.start, end: tm.end, hours: '', memo: '' }; ui.view = 'leave'; }
+      if (ds.pact === 'swap') { ui.chEdit = null; ui.chDraft = { date, shift: kind, fromId: pid, toId: '', memo: '' }; ui.view = 'change'; }
+      if (ds.pact === 'extra') { ui.exEdit = null; ui.exDraft = { date, pid, hours: '', memo: '' }; ui.view = 'extra'; }
+      if (ds.pact === 'leaveD') { ui.leaveEdit = null; ui.leaveDraft = Object.assign(leaveDraftDefault(), { from: date, to: date, start: date + 'T08:00', end: date + 'T16:00' }); ui.view = 'leave'; }
+      if (ds.pact === 'swapD') { ui.chEdit = null; ui.chDraft = Object.assign(chDraftDefault(), { date }); ui.view = 'change'; }
+      if (ds.pact === 'extraD') { ui.exEdit = null; ui.exDraft = { date, pid: '', hours: '', memo: '' }; ui.view = 'extra'; }
+      render(); window.scrollTo(0, 0); return;
+    }
+    if (ds.lmode) { ui.leaveDraft = Object.assign(readForm('#leaveForm'), { mode: ds.lmode }); syncLeaveDates(ui.leaveDraft); render(); return; }
+    if (ds.qshift) { const [s, en] = ds.qshift.split('|'); ui.leaveDraft = Object.assign(readForm('#leaveForm'), { mode: 'time', start: s, end: en }); render(); return; }
+    if (ds.ledit) { const l = st.leaves.find(x => x.id === ds.ledit); ui.leaveEdit = l.id; ui.leaveDraft = Object.assign(leaveDraftDefault(), l, { hours: l.hours == null ? '' : l.hours }); syncLeaveDates(ui.leaveDraft); render(); window.scrollTo(0, 0); return; }
+    if (ds.ldel) { if (confirm('이 휴가를 삭제할까요?')) { const L = st.leaves.find(x => x.id === ds.ldel); st.leaves = st.leaves.filter(x => x.id !== ds.ldel); if (ui.leaveEdit === ds.ldel) { ui.leaveEdit = null; ui.leaveDraft = null; } save('삭제했습니다.', `휴가 삭제: ${person(L.pid)?.name} ${L.kind} ${(L.start || L.from).replace('T', ' ')}`); } return; }
+    if (ds.cedit) { const c = st.changes.find(x => x.id === ds.cedit); ui.chEdit = c.id; ui.chDraft = Object.assign({}, c); render(); window.scrollTo(0, 0); return; }
+    if (ds.cdel) { if (confirm('이 근무 변경을 삭제할까요?')) { const C = st.changes.find(x => x.id === ds.cdel); st.changes = st.changes.filter(x => x.id !== ds.cdel); if (ui.chEdit === ds.cdel) { ui.chEdit = null; ui.chDraft = null; } save('삭제했습니다.', `근무변경 삭제: ${C.date} ${C.shift}`); } return; }
+    if (ds.xedit) { const x = st.extras.find(q => q.id === ds.xedit); ui.exEdit = x.id; ui.exDraft = Object.assign({}, x); render(); window.scrollTo(0, 0); return; }
+    if (ds.xdel) { if (confirm('이 추가근무를 삭제할까요?')) { const X = st.extras.find(q => q.id === ds.xdel); st.extras = st.extras.filter(q => q.id !== ds.xdel); if (ui.exEdit === ds.xdel) { ui.exEdit = null; ui.exDraft = null; } save('삭제했습니다.', `추가근무 삭제: ${X.date} ${person(X.pid)?.name}`); } return; }
+    if (ds.form) { ui.form = ds.form; render(); return; }
+    if (ds.lvg) { ui.lvGroup = ds.lvg; render(); return; }
+    if (ds.smode) { ui.syncMode = ds.smode; render(); return; }
+    if (ds.sel !== undefined && t.closest('[data-sel]')) { ui.sel = ds.sel || null; render(); return; }
+    if (ds.pdel) { const p = person(ds.pdel); const used = st.leaves.some(l => l.pid === p.id) || st.changes.some(c => c.fromId === p.id || c.toId === p.id) || st.extras.some(x => x.pid === p.id); if (confirm(`${p.name}을(를) 삭제할까요?${used ? '\n이 사람의 휴가·근무변경·추가근무 기록도 함께 삭제됩니다. 퇴사라면 삭제 대신 근무 종료일을 넣는 것을 권장합니다.' : ''}`)) { st.people = st.people.filter(x => x.id !== p.id); st.leaves = st.leaves.filter(l => l.pid !== p.id); st.changes = st.changes.filter(c => c.fromId !== p.id && c.toId !== p.id); st.extras = st.extras.filter(x => x.pid !== p.id); save('삭제했습니다.'); } return; }
+    if (ds.hdel) { e.preventDefault(); st.holidays = st.holidays.filter(x => x.date !== ds.hdel); save('공휴일을 삭제했습니다.'); return; }
+    const act = ds.act;
+    if (!act) return;
+    if (act === 'leaveSave') return leaveSave();
+    if (act === 'leaveCancel') { ui.leaveEdit = null; ui.leaveDraft = null; render(); return; }
+    if (act === 'leaveAll') { ui.leaveAll = t.checked; render(); return; }
+    if (act === 'chSave') return chSave();
+    if (act === 'chCancel') { ui.chEdit = null; ui.chDraft = null; render(); return; }
+    if (act === 'exSave') return exSave();
+    if (act === 'exCancel') { ui.exEdit = null; ui.exDraft = null; render(); return; }
+    if (act === 'xlsx') return exportXlsx();
+    if (act === 'syncCreate') { Sync.create(st).then(r => { applyShared(r, false); toast('공유 파일을 만들었습니다. 다른 자리에서는 "기존 공유 파일 연결"로 이 파일을 고르세요.'); }).catch(x => { if (x.name !== 'AbortError') toast('공유 파일을 만들지 못했습니다: ' + x.message); }); return; }
+    if (act === 'syncOpen') { if (!confirm('공유 파일의 내용으로 이 PC의 데이터를 바꿉니다. 계속할까요?')) return; Sync.open(st).then(r => { applyShared(r, false); toast('공유 파일에 연결했습니다.'); }).catch(x => { if (x.name !== 'AbortError') toast('연결하지 못했습니다: ' + x.message); }); return; }
+    if (act === 'syncRe') { Sync.reconnect(st).then(r => { if (r) { applyShared(r, false); toast('공유 파일에 다시 연결했습니다.'); } }).catch(x => toast('다시 연결하지 못했습니다: ' + x.message)); return; }
+    if (act === 'syncOff') { if (confirm('공유 파일 연결을 끊을까요? 이 PC에는 지금 내용이 그대로 남습니다.')) Sync.disconnect().then(() => { toast('연결을 끊었습니다.'); render(); }); return; }
+    if (act === 'syncNow') { Sync.poll().then(() => render()); return; }
+    if (act === 'fbConnect') {
+      const f = readForm('#fbForm'); if (!f.cfg.trim() || !f.email || !f.pw) return toast('Firebase 설정, 아이디, 비밀번호를 모두 입력하세요.');
+      t.disabled = true; t.textContent = '연결 중…';
+      FireSync.connect(f.cfg, f.email.trim(), f.pw, st).then(r => { if (r) { applyShared(r, false); toast('인터넷 공유에 연결했습니다.'); } else render(); }).catch(x => { toast('연결 실패: ' + FireSync.errMsg(x)); render(); });
+      return;
+    }
+    if (act === 'acctLogin') {
+      if (!FireSync.saved()) { ui.view = 'settings'; ui.syncMode = 'fb'; render(); window.scrollTo(0, document.body.scrollHeight); toast('처음 한 번은 Firebase 설정을 붙여넣고 연결해야 합니다. (총괄 담당자)'); return; }
+      const rc = t.getBoundingClientRect();
+      openPop(rc.right - 260, rc.bottom, `<h4>로그인</h4><p>아이디와 비밀번호를 입력하세요.</p><div id="popLogin"><div class="fld" style="margin-bottom:8px"><label>아이디</label><input name="email" autocomplete="username" placeholder="예: kanghee"></div><div class="fld" style="margin-bottom:4px"><label>비밀번호</label><input name="pw" type="password" autocomplete="current-password"></div></div><button class="btn pri" style="justify-content:center" data-act="popLoginGo">로그인</button>`);
+      setTimeout(() => { const i = document.querySelector('#popLogin input[name="email"]'); if (i) i.focus(); }, 30);
+      return;
+    }
+    if (act === 'impCancel') { ui.imp = null; render(); return; }
+    if (act === 'impApply') {
+      const r = LeaveImport.apply(st, ui.imp.planned, nid); ui.imp = null;
+      save(`엑셀 가져오기: 휴가 ${r.add}건 추가${r.del ? `, ${r.del}건 삭제` : ''}`, `엑셀 가져오기: 휴가 ${r.add}건 추가${r.del ? `, ${r.del}건 삭제` : ''}`); return;
+    }
+    if (act === 'onlyAll') { ui.only = ''; ui.sel = null; render(); return; }
+    if (act === 'pwOpen') {
+      const rc = t.getBoundingClientRect();
+      openPop(rc.right - 260, rc.bottom, `<h4>비밀번호 변경</h4><p>${h(FireSync.S.user)} 아이디의 비밀번호를 바꿉니다.</p><div id="popLogin" data-mode="pw"><div class="fld" style="margin-bottom:8px"><label>현재 비밀번호</label><input name="old" type="password" autocomplete="current-password"></div><div class="fld" style="margin-bottom:8px"><label>새 비밀번호 (6자 이상)</label><input name="pw1" type="password" autocomplete="new-password"></div><div class="fld" style="margin-bottom:4px"><label>새 비밀번호 확인</label><input name="pw2" type="password" autocomplete="new-password"></div></div><button class="btn pri" style="justify-content:center" data-act="pwGo">바꾸기</button>`);
+      setTimeout(() => { const i = document.querySelector('#popLogin input[name="old"]'); if (i) i.focus(); }, 30);
+      return;
+    }
+    if (act === 'pwGo') {
+      const f = readForm('#popLogin');
+      if (!f.old || !f.pw1) return toast('현재 비밀번호와 새 비밀번호를 입력하세요.');
+      if (f.pw1.length < 6) return toast('새 비밀번호는 6자 이상이어야 합니다.');
+      if (f.pw1 !== f.pw2) return toast('새 비밀번호 확인이 일치하지 않습니다.');
+      if (f.pw1 === f.old) return toast('지금과 다른 비밀번호를 입력하세요.');
+      t.disabled = true; t.textContent = '바꾸는 중…';
+      FireSync.changePassword(f.old, f.pw1).then(() => { closePop(); toast('비밀번호를 바꿨습니다. 다음 로그인부터 새 비밀번호를 쓰세요.'); }).catch(x => { t.disabled = false; t.textContent = '바꾸기'; toast('변경 실패: ' + (/wrong-password|invalid-credential|invalid-login/.test((x && x.code) || '') ? '현재 비밀번호가 맞지 않습니다.' : FireSync.errMsg(x))); });
+      return;
+    }
+    if (act === 'popLoginGo') { const f = readForm('#popLogin'); if (!f.email || !f.pw) return toast('아이디와 비밀번호를 입력하세요.'); t.disabled = true; t.textContent = '로그인 중…'; FireSync.login(f.email.trim(), f.pw).then(r => { closePop(); if (r) { applyShared(r, false); toast('로그인했습니다.'); } else render(); }).catch(x => { t.disabled = false; t.textContent = '로그인'; toast('로그인 실패: ' + FireSync.errMsg(x)); }); return; }
+    if (act === 'fbLogin') { const f = readForm('#fbLogin'); if (!f.email || !f.pw) return toast('아이디와 비밀번호를 입력하세요.'); FireSync.login(f.email.trim(), f.pw).then(r => { if (r) { applyShared(r, false); toast('로그인했습니다.'); } else render(); }).catch(x => toast('로그인 실패: ' + FireSync.errMsg(x))); return; }
+    if (act === 'fbLogout') { const wasStaff = isStaff(); FireSync.logout().then(() => { if (wasStaff) { st = JSON.parse(JSON.stringify(window.SEED)); load2(); saveLocal(); } toast('로그아웃했습니다.'); render(); }); return; }
+    if (act === 'staffFile') {
+      const c = FireSync.config(); if (!c) return toast('먼저 인터넷 공유에 연결하세요.');
+      const tag = '<script id="fbcfg" type="application/json">null</' + 'script>';
+      if (SRC.indexOf(tag) < 0) return toast('직원용 파일을 만들 수 없습니다(원본 형식 오류).');
+      const cfgJson = JSON.stringify({ config: c.config, path: c.path || 'shiftpay' }).replace(/</g, '\\u003c');
+      const out = SRC.replace(tag, '<script id="fbcfg" type="application/json">' + cfgJson + '</' + 'script>');
+      download(new Blob([out], { type: 'text/html' }), '근무수당관리_설치용.html'); toast('설치용 파일을 만들었습니다. 다른 PC에서 열고 로그인만 하면 됩니다. (개인 자료는 들어 있지 않습니다)'); return;
+    }
+    if (act === 'copyRules') { const txt = FireSync.rulesText(FireSync.S.user); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('보안 규칙을 복사했습니다. Firebase 콘솔 규칙 칸에 붙여넣고 게시하세요.'), () => toast('복사하지 못했습니다. "보안 규칙 보기"에서 직접 복사하세요.')); return; }
+    if (act === 'fbOff') { if (confirm('인터넷 공유 연결을 끊고 설정을 지울까요? 이 PC에는 지금 내용이 그대로 남습니다.')) FireSync.disconnect().then(() => { toast('연결을 끊었습니다.'); render(); }); return; }
+    if (act === 'print') return window.print();
+    if (act === 'addP') { const role = ds.role; const p = { id: nid('p'), name: '새 인원', role, team: 1, grade: role === '조장' ? '청원경찰' : '공무직', otRate: 0, nightRate: 0, holRate: 0, order: 99, start: '', end: '' }; st.people.push(p); save('인원을 추가했습니다. 이름과 조를 입력하세요.'); return; }
+    if (act === 'addHol') { const f = readForm('#holForm'); if (!f.date || !f.name) return toast('날짜와 이름을 입력하세요.'); st.holidays = st.holidays.filter(x => x.date !== f.date); st.holidays.push({ date: f.date, name: f.name }); save('공휴일을 추가했습니다.'); return; }
+    if (act === 'backup') { download(new Blob([JSON.stringify(st, null, 1)], { type: 'application/json' }), `근무수당_백업_${new Date().toISOString().slice(0, 10)}.json`); toast('백업 파일을 저장했습니다.'); return; }
+    if (act === 'reset') { if (confirm('이 PC의 입력 내용을 모두 지울까요?\n먼저 백업 파일을 저장해 두는 것을 권장합니다. (인터넷 공유 중이면 공유 데이터에는 영향이 없습니다)')) { st = JSON.parse(JSON.stringify(window.SEED)); ui.leaveDraft = ui.chDraft = ui.exDraft = null; save('초기화했습니다.'); } return; }
+  });
+  function syncLeaveDates(d) {
+    if (d.mode === 'day' && d.start) { d.from = d.from || d.start.slice(0, 10); d.to = d.to || d.end.slice(0, 10); }
+    if (d.mode === 'time' && !d.start) { d.start = d.from + 'T08:00'; d.end = d.to + 'T16:00'; }
+  }
+  document.addEventListener('input', e => {
+    const f = e.target.closest('#leaveForm,#chForm,#exForm');
+    if (f && f.id === 'leaveForm') { ui.leaveDraft = Object.assign(ui.leaveDraft || {}, readForm('#leaveForm')); $('#lprev').innerHTML = leavePreview(ui.leaveDraft); }
+  });
+  document.addEventListener('change', e => {
+    const el = e.target;
+    if (el.closest('#leaveForm')) { ui.leaveDraft = Object.assign(ui.leaveDraft || {}, readForm('#leaveForm')); render(); return; }
+    if (el.id === 'impFile' && el.files.length) { importFiles([...el.files]); return; }
+    if (el.dataset.impck !== undefined) { const o = ui.imp.planned[Number(el.dataset.impck)]; o.checked = el.checked; render(); return; }
+    if (el.id === 'lvWho') { ui.lvWho = el.value; render(); return; }
+    if (el.id === 'onlySel') { ui.only = el.value; ui.sel = el.value || null; render(); return; }
+    if (el.closest('#chForm')) { ui.chDraft = Object.assign(ui.chDraft || {}, readForm('#chForm')); render(); return; }
+    if (el.closest('#exForm')) { ui.exDraft = Object.assign(ui.exDraft || {}, readForm('#exForm')); render(); return; }
+    if (el.dataset.pf) { const p = person(el.closest('tr').dataset.pid); let v = el.value.trim ? el.value : el.value; if (el.dataset.pf === 'loginId') { v = v.trim(); if (v && !/^[A-Za-z0-9_-]+$/.test(v)) { toast('로그인 아이디는 영문·숫자만 쓰세요.'); el.value = p.loginId || ''; return; } } if (['otRate', 'nightRate', 'holRate', 'order', 'team'].includes(el.dataset.pf)) v = Number(v) || 0; p[el.dataset.pf] = v; save('저장했습니다.'); return; }
+    if (el.dataset.seat !== undefined) { try { localStorage.setItem('dh-seat', el.value.trim()); } catch (x) { } toast('자리 이름을 저장했습니다.'); return; }
+    if (el.dataset.sf) { st.settings[el.dataset.sf] = el.value; save('저장했습니다.'); return; }
+    if (el.dataset.duty) { if (el.value === '') delete st.settings.dutyDays[el.dataset.duty]; else st.settings.dutyDays[el.dataset.duty] = Number(el.value); save('저장했습니다.'); return; }
+    if (el.id === 'restore' && el.files[0]) {
+      const rd = new FileReader(); rd.onload = () => { try { const o = JSON.parse(rd.result); if (!o.people || !o.leaves) throw 0; if (confirm('백업 파일 내용으로 바꿀까요? 지금 입력된 내용은 덮어씌워집니다.')) { st = o; load2(); save('백업을 불러왔습니다.'); } } catch (x) { toast('백업 파일 형식이 올바르지 않습니다.'); } }; rd.readAsText(el.files[0]);
+    }
+  });
+  function load2() { const keep = st; st = keep; ['people', 'leaves', 'changes', 'extras', 'holidays'].forEach(k => st[k] = st[k] || []); st.settings = st.settings || {}; st.settings.dutyDays = st.settings.dutyDays || {}; st.ui = st.ui || { y: 2026, m: 9 }; st.seq = st.seq || 5000; }
+
+  function leaveSave() {
+    const d = Object.assign(ui.leaveDraft || {}, readForm('#leaveForm'));
+    if (!d.pid) return toast('이름을 선택하세요.');
+    if (d.mode === 'time') { if (!d.start || !d.end || E.mins(d.end) <= E.mins(d.start)) return toast('시작·종료 일시를 확인하세요.'); }
+    else if (!d.from || !d.to || E.dn(d.to) < E.dn(d.from)) return toast('시작·종료일을 확인하세요.');
+    const rec = { pid: d.pid, kind: d.kind, mode: d.mode, memo: d.memo || '', hours: d.hours === '' || d.hours == null ? null : Number(d.hours) };
+    if (d.mode === 'time') { rec.start = d.start; rec.end = d.end; } else { rec.from = d.from; rec.to = d.to; }
+    if (ui.leaveEdit) { const i = st.leaves.findIndex(x => x.id === ui.leaveEdit); st.leaves[i] = Object.assign({ id: ui.leaveEdit }, rec); }
+    else st.leaves.push(Object.assign({ id: nid('l') }, rec));
+    const keepP = d.pid, wasEdit = ui.leaveEdit; ui.leaveEdit = null; ui.leaveDraft = Object.assign(leaveDraftDefault(), { pid: keepP });
+    save('휴가를 저장했습니다.', `휴가 ${wasEdit ? '수정' : '등록'}: ${person(rec.pid)?.name} ${rec.kind} ${rec.mode === 'time' ? rec.start.replace('T', ' ') + '~' + rec.end.replace('T', ' ') : rec.from + '~' + rec.to}`);
+  }
+  function chSave() {
+    const d = Object.assign(ui.chDraft || {}, readForm('#chForm'));
+    if (!d.date) return toast('날짜를 입력하세요.');
+    if (!d.fromId && !d.toId) return toast('빠지는 사람이나 대신 근무할 사람을 고르세요.');
+    if (d.fromId && d.fromId === d.toId) return toast('변경 전·후가 같습니다.');
+    const rec = { date: d.date, shift: d.shift, fromId: d.fromId || '', toId: d.toId || '', memo: d.memo || '' };
+    if (ui.chEdit) { const i = st.changes.findIndex(x => x.id === ui.chEdit); st.changes[i] = Object.assign({ id: ui.chEdit }, rec); }
+    else st.changes.push(Object.assign({ id: nid('c') }, rec));
+    const wasC = ui.chEdit; ui.chEdit = null; ui.chDraft = Object.assign(chDraftDefault(), { date: d.date });
+    save('근무 변경을 저장했습니다.', `근무변경 ${wasC ? '수정' : '등록'}: ${rec.date} ${rec.shift} ${rec.fromId ? person(rec.fromId)?.name : '(추가)'} → ${rec.toId ? person(rec.toId)?.name : '(빼기)'}`);
+  }
+  function exSave() {
+    const d = Object.assign(ui.exDraft || {}, readForm('#exForm'));
+    if (!d.date || !d.pid || !(Number(d.hours) > 0)) return toast('날짜·이름·시간을 입력하세요.');
+    const rec = { date: d.date, pid: d.pid, hours: Number(d.hours), memo: d.memo || '' };
+    if (ui.exEdit) { const i = st.extras.findIndex(x => x.id === ui.exEdit); st.extras[i] = Object.assign({ id: ui.exEdit }, rec); }
+    else st.extras.push(Object.assign({ id: nid('x') }, rec));
+    ui.exEdit = null; ui.exDraft = null; save('추가근무를 저장했습니다.', `추가근무: ${rec.date} ${person(rec.pid)?.name} ${rec.hours}시간`);
+  }
+  window.addEventListener('scroll', () => { if (!document.querySelector('#popLogin')) closePop(); }, { passive: true });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest && e.target.closest('#popLogin')) { const b = document.querySelector('[data-act="popLoginGo"],[data-act="pwGo"]'); if (b) b.click(); } });
+
+  load();
+  render();
+  const cbs = { getState: () => st, setState: (o, other) => applyShared(o, other), onStatus: () => { const el = $('#saved'); if (el) el.innerHTML = syncBadge(); const ac = $('#acct'); if (ac) ac.innerHTML = acctHtml(); }, seat };
+  Sync.init(cbs);
+  FireSync.init(cbs).then(r => { if (r) return applyShared(r, false); if (FireSync.S.linked) return render(); Sync.restore().then(x => { if (x) applyShared(x, false); else render(); }); });
+  document.addEventListener('focusout', () => setTimeout(() => { if (pendingRender && !(document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))) { pendingRender = false; render(); } }, 50));
+})();
+</script>
+</body>
+</html>
