@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>근무·수당 관리</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231f3a5f'/><rect x='12' y='16' width='40' height='36' rx='5' fill='%23fff'/><rect x='12' y='16' width='40' height='9' rx='4' fill='%230f766e'/><g fill='%231f3a5f'><rect x='18' y='30' width='7' height='6' rx='1'/><rect x='28.5' y='30' width='7' height='6' rx='1'/><rect x='39' y='30' width='7' height='6' rx='1'/><rect x='18' y='40' width='7' height='6' rx='1'/><rect x='28.5' y='40' width='7' height='6' rx='1'/></g></svg>">
+<meta name="application-name" content="근무·수당 관리">
+<meta name="theme-color" content="#1f3a5f">
 <style>:root{
   --bg:#f4f5f7; --panel:#ffffff; --ink:#1d2433; --ink2:#4a5468; --ink3:#7b8497; --line:#e2e5eb; --line2:#cfd4dd;
   --pri:#1f3a5f; --pri2:#2c5282; --pri-soft:#e8eef6; --acc:#0f766e; --acc-soft:#e3f3f1;
@@ -466,7 +469,10 @@ table.t.inbox th{top:0;z-index:1}
       xfMap[key] = xfs.length - 1; return xfMap[key];
     }
     const files = [];
+    const b64 = d => { const t = (typeof atob === 'function') ? atob(d) : Buffer.from(d, 'base64').toString('binary'); const o = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) o[i] = t.charCodeAt(i); return o; };
+    let imgNo = 0; const drawSheets = [];
     const sheetXml = sheets.map((sh, si) => {
+      const imgs = [];
       let rowsXml = '';
       let maxC = 0;
       sh.rows.forEach((row, ri) => {
@@ -476,6 +482,7 @@ table.t.inbox th{top:0;z-index:1}
         row.forEach((c, ci) => {
           if (c === undefined || c === null) return;
           if (typeof c !== 'object') c = { v: c };
+          if (c.img && /^data:image\/png;base64,/.test(c.img)) imgs.push({ r: ri, c: ci, data: b64(c.img.split(',')[1]) });
           const r = col(ci) + (ri + 1); const s = style(c.s); maxC = Math.max(maxC, ci);
           if (c.f) cells += `<c r="${r}" s="${s}"><f>${esc(c.f)}</f>${typeof c.v === 'number' ? `<v>${c.v}</v>` : ''}</c>`;
           else if (typeof c.v === 'number' && isFinite(c.v)) cells += `<c r="${r}" s="${s}"><v>${c.v}</v></c>`;
@@ -487,8 +494,24 @@ table.t.inbox th{top:0;z-index:1}
       const cols = (sh.cols || []).map((w, i) => w ? `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>` : '').join('');
       const merges = (sh.merges || []).length ? `<mergeCells count="${sh.merges.length}">${sh.merges.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : '';
       const fit = sh.fit !== false;
+      let drawingTag = '';
+      if (imgs.length) {
+        const dn = drawSheets.length + 1; drawSheets.push({ si, dn });
+        const EMU = 9525; let anchors = '', rels = '';
+        imgs.forEach((im, k) => {
+          imgNo++; files.push({ name: `xl/media/image${imgNo}.png`, data: im.data });
+          rels += `<Relationship Id="rId${k + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${imgNo}.png"/>`;
+          const w = Math.round(((sh.cols && sh.cols[im.c]) || 8.43) * 7 + 5) - 8, hpx = Math.round(((sh.heights && sh.heights[im.r + 1]) || 15) * 96 / 72) - 6;
+          let iw = w, ih = Math.round(w / 3); if (ih > hpx) { ih = hpx; iw = ih * 3; }
+          anchors += `<xdr:oneCellAnchor><xdr:from><xdr:col>${im.c}</xdr:col><xdr:colOff>${4 * EMU}</xdr:colOff><xdr:row>${im.r}</xdr:row><xdr:rowOff>${3 * EMU}</xdr:rowOff></xdr:from><xdr:ext cx="${iw * EMU}" cy="${ih * EMU}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${k + 2}" name="서명 ${k + 1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${k + 1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${iw * EMU}" cy="${ih * EMU}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`;
+        });
+        files.push({ name: `xl/drawings/drawing${dn}.xml`, data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${anchors}</xdr:wsDr>`) });
+        files.push({ name: `xl/drawings/_rels/drawing${dn}.xml.rels`, data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels}</Relationships>`) });
+        files.push({ name: `xl/worksheets/_rels/sheet${si + 1}.xml.rels`, data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${dn}.xml"/></Relationships>`) });
+        drawingTag = '<drawing r:id="rId1"/>';
+      }
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${fit ? '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' : ''}<sheetViews><sheetView workbookViewId="0"${si === 0 ? ' tabSelected="1"' : ''}${sh.freeze ? '' : ''}/></sheetViews><sheetFormatPr defaultRowHeight="16.5"/>${cols ? `<cols>${cols}</cols>` : ''}<sheetData>${rowsXml}</sheetData>${merges}<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${sh.landscape ? 'landscape' : 'portrait'}"${fit ? ' fitToWidth="1" fitToHeight="0"' : ''}/></worksheet>`;
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${fit ? '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' : ''}<sheetViews><sheetView workbookViewId="0"${si === 0 ? ' tabSelected="1"' : ''}${sh.freeze ? '' : ''}/></sheetViews><sheetFormatPr defaultRowHeight="16.5"/>${cols ? `<cols>${cols}</cols>` : ''}<sheetData>${rowsXml}</sheetData>${merges}<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${sh.landscape ? 'landscape' : 'portrait'}"${fit ? ' fitToWidth="1" fitToHeight="0"' : ''}/>${drawingTag}</worksheet>`;
     });
     sheetXml.forEach((x, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: enc.encode(x) }));
     const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -502,7 +525,7 @@ table.t.inbox th{top:0;z-index:1}
     files.push({ name: '_rels/.rels', data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`) });
     files.push({ name: '[Content_Types].xml', data: enc.encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`) });
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}${drawSheets.map(d => `<Override PartName="/xl/drawings/drawing${d.dn}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`) });
     files.reverse();
     return zip(files);
   }
@@ -527,6 +550,14 @@ table.t.inbox th{top:0;z-index:1}
   function grid(nr, nc) { return Array.from({ length: nr }, () => Array(nc).fill(undefined)); }
   function boxFill(rows, r0, r1_, c0, c1, s) { for (let r = r0; r <= r1_; r++) for (let c = c0; c <= c1; c++) if (rows[r][c] === undefined) rows[r][c] = cell('', s); }
 
+  // 서명: 서명할 때의 수당과 지금 수당이 같아야 '유효'
+  function sigOf(o) { return o.p.role === '관제' ? `G|${r1(o.ot)}|${r1(o.night)}|${r1(o.hol)}|${o.pay.total}` : `J|${r1(o.overtimeJ)}|${r1(o.nightH)}|${o.holDays}`; }
+  const ymOf = R => `${R.y}-${String(R.m).padStart(2, '0')}`;
+  function signOf(st, R, pid) {
+    const s = st.signs && st.signs[pid] && st.signs[pid][ymOf(R)]; const o = R.persons[pid];
+    if (!s || !o) return { state: 'none' };
+    return { state: s.sig === sigOf(o) ? 'ok' : 'stale', s };
+  }
   function payStatement(st, R) {
     const ppl = st.people.filter(p => p.role === '관제').sort(byOrder).filter(p => R.persons[p.id]);
     const n = ppl.length, rows = grid(5 + n, 14);
@@ -543,12 +574,12 @@ table.t.inbox th{top:0;z-index:1}
       t.f += F; t.i += I; t.l += L; t.m += F + I + L;
       rows[r] = [cell(k + 1, S.c), cell(p.name, S.c), cell(o.workDays, S.c), cell(r1(o.ot), S.n), cell(p.otRate, S.n), cell(F, S.n, `ROUNDDOWN(D${x}*E${x},-1)`),
         cell(r1(o.night), S.n), cell(p.nightRate, S.n), cell(I, S.n, `ROUNDDOWN(G${x}*H${x},-1)`), cell(r1(o.hol), S.n), cell(p.holRate, S.n), cell(L, S.n, `ROUNDDOWN(J${x}*K${x},-1)`),
-        cell(F + I + L, S.n, `F${x}+I${x}+L${x}`), cell('', S.c)];
+        cell(F + I + L, S.n, `F${x}+I${x}+L${x}`), (() => { const g = signOf(st, R, p.id); return g.state === 'ok' ? { v: '', s: S.c, img: g.s.img } : cell(g.state === 'stale' ? '서명 후 변경' : '', { border: 1, h: 'center', sz: 8, color: 'C00000', wrap: 1 }); })()];
     });
     const e = 5 + n;
     rows[4] = [cell('', S.cb), cell('계', S.cb), cell('', S.cb), cell('', S.cb), cell('', S.cb), cell(t.f, S.nb, `SUM(F6:F${e})`), cell('', S.cb), cell('', S.cb), cell(t.i, S.nb, `SUM(I6:I${e})`), cell('', S.cb), cell('', S.cb), cell(t.l, S.nb, `SUM(L6:L${e})`), cell(t.m, S.nb, `SUM(M6:M${e})`), cell('', S.cb)];
-    const heights = { 1: 60, 2: 26, 3: 30, 4: 30 }; for (let i = 5; i <= e; i++) heights[i] = 30;
-    return { name: '지급명세서', rows, merges: ['A1:N1', 'K2:M2', 'A3:A4', 'B3:B4', 'C3:C4', 'D3:F3', 'G3:I3', 'J3:L3', 'M3:M4', 'N3:N4'], cols: [6.3, 9.7, 6.7, 9.4, 9.7, 12, 8, 9.7, 13, 10.8, 9.7, 13, 13, 11.3], heights, landscape: true, total: t };
+    const heights = { 1: 60, 2: 26, 3: 30, 4: 30 }; for (let i = 5; i <= e; i++) heights[i] = 36;
+    return { name: '지급명세서', rows, merges: ['A1:N1', 'K2:M2', 'A3:A4', 'B3:B4', 'C3:C4', 'D3:F3', 'G3:I3', 'J3:L3', 'M3:M4', 'N3:N4'], cols: [6.3, 9.7, 6.7, 9.4, 9.7, 12, 8, 9.7, 13, 10.8, 9.7, 13, 13, 15], heights, landscape: true, total: t };
   }
 
   function workDetail(st, R) {
@@ -696,7 +727,7 @@ table.t.inbox th{top:0;z-index:1}
   ];
   const EXTRA = [summarySheet, dailySheet, leaveSheet, changeSheet, extraSheet];
   function allSheets(st, R) { return FORMS.map(f => f.fn(st, R)).concat(EXTRA.map(f => f(st, R))); }
-  G.Reports = { FORMS, allSheets, S };
+  G.Reports = { FORMS, allSheets, S, sigOf, signOf, ymOf };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>/* ===== 엑셀 읽기 (.xls BIFF8 / .xlsx) — 외부 라이브러리 없이 첫 시트를 2차원 배열로 ===== */
@@ -967,6 +998,15 @@ table.t.inbox th{top:0;z-index:1}
       if (md[key] === undefined) delete td[key]; else td[key] = md[key];
     }
     out.settings.dutyDays = td;
+    const bS = base.signs || {}, mS = mine.signs || {}, tS = clone(theirs.signs || {});
+    for (const pid of new Set(Object.keys(bS).concat(Object.keys(mS)))) {
+      const b = bS[pid] || {}, m = mS[pid] || {};
+      for (const ym of new Set(Object.keys(b).concat(Object.keys(m)))) {
+        if (J(m[ym]) === J(b[ym])) continue;
+        if (m[ym] === undefined) { if (tS[pid]) delete tS[pid][ym]; } else { tS[pid] = tS[pid] || {}; tS[pid][ym] = m[ym]; }
+      }
+    }
+    out.signs = tS;
     out.log = (out.log || []).sort((a, b) => a.t.localeCompare(b.t)).slice(-300);
     out.seq = Math.max(mine.seq || 0, theirs.seq || 0);
     out.version = theirs.version || mine.version || 1;
@@ -1126,7 +1166,7 @@ table.t.inbox th{top:0;z-index:1}
     const m = normMaster(parts.master), d = normData(parts.data), r = parts.rates || {};
     m.settings.dutyDays = m.settings.dutyDays || {};
     m.people = m.people.map(p => Object.assign({}, p, r[p.id] || {}));
-    return Object.assign({}, m, d, { seq: 0 });
+    return Object.assign({}, m, d, { seq: 0, signs: clone(parts.signs) || {} });
   }
   function strip(st) { const o = clone(st); delete o.ui; return o; }
   function splitMaster(st) { return { people: (st.people || []).map(p => { const q = Object.assign({}, p); RATE_KEYS.forEach(k => delete q[k]); return q; }), holidays: st.holidays || [], settings: st.settings || {}, version: st.version || 1 }; }
@@ -1176,18 +1216,19 @@ table.t.inbox th{top:0;z-index:1}
     if (!m.ok) throw m.e; if (!d.ok) throw d.e;
     const admin = r.ok;
     let myPid = '';
-    parts = { master: m.v, data: d.v, rates: admin ? (r.v || {}) : {} };
+    parts = { master: m.v, data: d.v, rates: admin ? (r.v || {}) : {}, signs: {} };
+    if (admin) { const sg = await tryRead(root.child('signs')); parts.signs = sg.ok ? (sg.v || {}) : {}; S.signErr = !sg.ok; }
     if (!m.v) {
       if (!admin) throw new Error('아직 공유 데이터가 없습니다. 총괄 아이디로 먼저 연결해 주세요.');
       if (!confirm('공유 데이터가 아직 비어 있습니다.\n이 PC의 지금 내용을 올려서 공유를 시작할까요?')) { status({ busy: false }); return null; }
       const st = strip(mine || cb.getState());
       await Promise.all([root.child('master').set(splitMaster(st)), root.child('data').set(splitData(st)), root.child('rates').set(splitRates(st)), root.child('accounts').set(splitAccounts(st))]);
-      parts = { master: splitMaster(st), data: splitData(st), rates: splitRates(st) };
+      parts = { master: splitMaster(st), data: splitData(st), rates: splitRates(st), signs: parts.signs || {} };
     }
     if (!admin) {
       const a = await tryRead(root.child('accounts/' + myId));
       myPid = a.ok && a.v ? a.v : '';
-      if (myPid) { const rr = await tryRead(root.child('rates/' + myPid)); if (rr.ok && rr.v) parts.rates = { [myPid]: rr.v }; }
+      if (myPid) { const rr = await tryRead(root.child('rates/' + myPid)); if (rr.ok && rr.v) parts.rates = { [myPid]: rr.v }; const sg = await tryRead(root.child('signs/' + myPid)); parts.signs = sg.ok && sg.v ? { [myPid]: sg.v } : {}; S.signErr = !sg.ok; }
     }
     status({ role: admin ? 'admin' : 'staff', myPid });
     base = combine();
@@ -1200,6 +1241,9 @@ table.t.inbox th{top:0;z-index:1}
     const on = (path, key) => { const ref = root.child(path); const f = s => { const v = s.val(); if (key === 'rates' && !admin) parts.rates = v ? { [myPid]: v } : {}; else parts[key] = v; remote(); }; ref.on('value', f, e => status({ error: errMsg(e) })); offs.push(() => ref.off('value', f)); };
     on('master', 'master'); on('data', 'data');
     if (admin) on('rates', 'rates'); else if (myPid) on('rates/' + myPid, 'rates');
+    // 서명: 규칙이 아직 없으면 조용히 건너뜀
+    const sp = admin ? 'signs' : (myPid ? 'signs/' + myPid : '');
+    if (sp) { const ref = root.child(sp); const f = s => { const v = s.val(); parts.signs = admin ? (v || {}) : (v ? { [myPid]: v } : {}); S.signErr = false; remote(); }; ref.on('value', f, () => { S.signErr = true; }); offs.push(() => ref.off('value', f)); }
   }
   function remote() {
     const t = combine(); if (J(t) === J(base)) return;
@@ -1208,7 +1252,7 @@ table.t.inbox th{top:0;z-index:1}
     base = t;
     status({ lastSync: new Date(), error: '' });
     if (J(pick(merged, DATA_C)) !== J(pick(t, DATA_C))) push(cb.getState());
-    const canon = o => J(['people', 'holidays', 'leaves', 'changes', 'extras', 'settings'].map(k => o[k] || null));
+    const canon = o => J(['people', 'holidays', 'leaves', 'changes', 'extras', 'settings', 'signs'].map(k => o[k] || null));
     if (canon(merged) !== canon(mineNow)) cb.setState(merged, true); else if (J(merged.log) !== J(mineNow.log)) cb.setState(merged, false);
   }
   function pick(o, keys) { const r = {}; keys.forEach(k => r[k] = o[k] || []); return r; }
@@ -1240,6 +1284,7 @@ table.t.inbox th{top:0;z-index:1}
     return JSON.stringify({ rules: { [p]: {
       master: { '.read': 'auth != null', '.write': A },
       data: { '.read': 'auth != null', '.write': 'auth != null' },
+      signs: { '.read': A, '.write': A, '$pid': { '.read': `auth != null && root.child('${p}/accounts/' + auth.token.email.replace('${DOM}', '')).val() === $pid`, '.write': `auth != null && root.child('${p}/accounts/' + auth.token.email.replace('${DOM}', '')).val() === $pid` } },
       rates: { '.read': A, '.write': A, '$pid': { '.read': `auth != null && root.child('${p}/accounts/' + auth.token.email.replace('${DOM}', '')).val() === $pid` } },
       accounts: { '.read': A, '.write': A, '$id': { '.read': `auth != null && auth.token.email === $id + '${DOM}'` } }
     } } }, null, 2);
@@ -1272,6 +1317,13 @@ table.t.inbox th{top:0;z-index:1}
     },
     async logout() { offs.forEach(f => f()); offs = []; root = null; if (app) await app.auth().signOut(); status({ needLogin: true, user: '', role: '', myPid: '' }); },
     async disconnect() { offs.forEach(f => f()); offs = []; root = null; try { if (app) await app.auth().signOut(); } catch (e) { } localStorage.removeItem(CFG_KEY); cfg = null; status({ linked: false, needLogin: false, name: '', error: '', user: '', role: '', myPid: '', lastSync: null }); },
+    async signSet(pid, ym, val) {
+      if (!root) throw new Error('먼저 로그인하세요.');
+      try { await root.child(`signs/${pid}/${ym}`).set(val || null); }
+      catch (e) { if (/PERMISSION/i.test((e && e.code) || '') || /permission/i.test(String(e && e.message))) throw new Error('서명 저장 권한이 없습니다. 총괄 담당자가 보안 규칙을 새로 복사해 게시해야 합니다.'); throw e; }
+      parts.signs = parts.signs || {}; parts.signs[pid] = Object.assign({}, parts.signs[pid] || {}); if (val) parts.signs[pid][ym] = val; else delete parts.signs[pid][ym];
+      base = combine();
+    },
     async changePassword(oldPw, newPw) {
       const u = app && app.auth().currentUser; if (!u) throw new Error('먼저 로그인하세요.');
       const cred = G.firebase.auth.EmailAuthProvider.credential(u.email, oldPw);
@@ -1640,14 +1692,65 @@ table.t.inbox th{top:0;z-index:1}
     return `<h2>수당 결과</h2><p class="sub">${st.ui.y}년 ${st.ui.m}월 · 복무규정 근무일수 ${R.dutyDays}일 · ${ui.only ? `<b>${h(person(ui.only)?.name)}</b> 한 사람만 보는 중` : '이름을 고르면 그 사람 것만 볼 수 있습니다.'}</p>${pick}
     ${alertBox(R)}
     ${isStaff() || ui.only ? '' : `<div class="kpis"><div class="kpi"><span>관제요원 지급 합계</span><b>${won(tot.t)}원</b></div><div class="kpi"><span>시간외수당</span><b>${won(tot.ot)}원</b></div><div class="kpi"><span>야간수당</span><b>${won(tot.n)}원</b></div><div class="kpi"><span>휴일수당</span><b>${won(tot.h)}원</b></div></div>`}
+    ${(isStaff() || ui.only) && R.persons[isStaff() ? me() : ui.only] ? signCard(R, isStaff() ? me() : ui.only) : ''}
     <div class="split"><div>
-    ${G.length ? '' : '<!--'}<div class="card"><h3>관제요원</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">근무일수</th><th class="num">총근무</th><th class="num">주초과</th><th class="num">추가</th><th class="num">야간</th><th class="num">휴일</th><th class="num">시간외수당</th><th class="num">야간수당</th><th class="num">휴일수당</th><th class="num">합계</th></tr></thead><tbody>
-    ${G.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.workDays}</td><td class="num">${r1(o.total)}</td><td class="num">${r1(o.weekOver)}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num">${r1(o.night)}</td><td class="num">${r1(o.hol)}</td><td class="num">${won(o.pay.ot)}</td><td class="num">${won(o.pay.night)}</td><td class="num">${won(o.pay.hol)}</td><td class="num"><b>${won(o.pay.total)}</b></td></tr>`; }).join('')}
-    ${isStaff() || ui.only ? '' : `<tr class="total"><td>합계</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">${won(tot.ot)}</td><td class="num">${won(tot.n)}</td><td class="num">${won(tot.h)}</td><td class="num">${won(tot.t)}</td></tr>`}</tbody></table></div>${G.length ? '' : '-->'}
-    ${J.length ? '' : '<!--'}<div class="card"><h3>조장 (청원경찰)</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">주간</th><th class="num">야간</th><th class="num">휴일일수</th><th class="num">실제근무①</th><th class="num">복무규정②</th><th class="num">휴일지급③</th><th class="num">미체크</th><th class="num">초과근무</th><th class="num">야간시간</th><th class="num">휴가 제외</th></tr></thead><tbody>
-    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.dayCnt}</td><td class="num">${o.nightCnt}</td><td class="num">${o.holDays}</td><td class="num">${r1(o.actual)}</td><td class="num">${r1(o.duty)}</td><td class="num">${o.holPay}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num"><b>${r1(o.overtimeJ)}</b></td><td class="num">${r1(o.nightH)}</td><td class="num">${r1(o.leaveTotal) || ''}</td></tr>`; }).join('')}
+    ${G.length ? '' : '<!--'}<div class="card"><h3>관제요원</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">근무일수</th><th class="num">총근무</th><th class="num">주초과</th><th class="num">추가</th><th class="num">야간</th><th class="num">휴일</th><th class="num">시간외수당</th><th class="num">야간수당</th><th class="num">휴일수당</th><th class="num">합계</th><th class="c">서명</th></tr></thead><tbody>
+    ${G.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.workDays}</td><td class="num">${r1(o.total)}</td><td class="num">${r1(o.weekOver)}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num">${r1(o.night)}</td><td class="num">${r1(o.hol)}</td><td class="num">${won(o.pay.ot)}</td><td class="num">${won(o.pay.night)}</td><td class="num">${won(o.pay.hol)}</td><td class="num"><b>${won(o.pay.total)}</b></td><td class="c">${signTag(R, p.id)}</td></tr>`; }).join('')}
+    ${isStaff() || ui.only ? '' : `<tr class="total"><td>합계</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">${won(tot.ot)}</td><td class="num">${won(tot.n)}</td><td class="num">${won(tot.h)}</td><td class="num">${won(tot.t)}</td><td class="c hint">${G.filter(p => Reports.signOf(st, R, p.id).state === 'ok').length}/${G.length}</td></tr>`}</tbody></table></div>${G.length ? '' : '-->'}
+    ${J.length ? '' : '<!--'}<div class="card"><h3>조장 (청원경찰)</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">주간</th><th class="num">야간</th><th class="num">휴일일수</th><th class="num">실제근무①</th><th class="num">복무규정②</th><th class="num">휴일지급③</th><th class="num">미체크</th><th class="num">초과근무</th><th class="num">야간시간</th><th class="num">휴가 제외</th><th class="c">서명</th></tr></thead><tbody>
+    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.dayCnt}</td><td class="num">${o.nightCnt}</td><td class="num">${o.holDays}</td><td class="num">${r1(o.actual)}</td><td class="num">${r1(o.duty)}</td><td class="num">${o.holPay}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num"><b>${r1(o.overtimeJ)}</b></td><td class="num">${r1(o.nightH)}</td><td class="num">${r1(o.leaveTotal) || ''}</td><td class="c">${signTag(R, p.id)}</td></tr>`; }).join('')}
     </tbody></table><p class="hint" style="margin:10px 0 0">초과근무 = max(0, ①−②−③) + 미체크 초과. ② = 복무규정 근무일수×8 − 휴가시간.</p></div>${J.length ? '' : '-->'}
     </div><div class="drawer">${sel ? personDetail(R, sel) : '<div class="card"><div class="empty">왼쪽 표에서 사람을 고르면<br>날짜별 근무시간·야간·휴일·휴가 차감 내역이 나옵니다.</div></div>'}</div></div>`;
+  }
+  function signTag(R, pid) {
+    const g = Reports.signOf(st, R, pid);
+    return g.state === 'ok' ? '<span class="tag" style="background:var(--acc-soft);color:var(--acc)">✓ 서명</span>' : g.state === 'stale' ? '<span class="tag" style="background:var(--org-soft);color:var(--org)">다시 서명</span>' : '<span class="hint">-</span>';
+  }
+  function signCard(R, pid) {
+    const o = R.persons[pid], p = o.p, g = Reports.signOf(st, R, pid);
+    const sum = p.role === '관제' ? `시간외 <b>${r1(o.ot)}시간 ${won(o.pay.ot)}원</b> · 야간 <b>${r1(o.night)}시간 ${won(o.pay.night)}원</b> · 휴일 <b>${r1(o.hol)}시간 ${won(o.pay.hol)}원</b> · 합계 <b style="font-size:16px">${won(o.pay.total)}원</b>`
+      : `초과근무 <b>${r1(o.overtimeJ)}시간</b> · 야간근무 <b>${r1(o.nightH)}시간</b> · 휴일근무 <b>${o.holDays}일</b>`;
+    const when = g.s ? new Date(g.s.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const state = g.state === 'ok' ? `<div class="preview" style="background:var(--acc-soft);color:#0b5a53"><b>✓ ${when} 서명 완료</b> — 출력 양식의 지급명세서 비고란에 이 서명이 들어갑니다.</div>`
+      : g.state === 'stale' ? `<div class="preview warn"><b>서명한 뒤(${when}) 수당이 바뀌었습니다.</b> 바뀐 내용을 확인하고 다시 서명해 주세요.</div>` : '';
+    const showPad = g.state !== 'ok' || ui.signRedo === pid;
+    const pad = !showPad ? `<div class="row" style="align-items:center;gap:14px;margin-top:10px"><img src="${g.s.img}" alt="서명" style="height:70px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:4px"><button class="btn sm" data-act="signRedo">다시 서명</button>${isStaff() ? '' : `<button class="btn sm ghost danger" data-act="signDel" data-pid="${pid}">서명 지우기</button>`}</div>`
+      : `<div style="margin-top:10px"><canvas id="signPad" width="480" height="160" style="width:480px;max-width:100%;height:160px;border:2px dashed var(--line2);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair"></canvas>
+        <div class="row" style="margin-top:8px;align-items:center"><button class="btn pri" data-act="signSave" data-pid="${pid}">위 금액이 맞음을 확인하고 서명 제출</button><button class="btn" data-act="signClear">지우기</button><span class="hint">마우스(또는 터치)로 네모 안에 서명하세요.${isStaff() ? '' : ' 총괄 화면에서는 본인이 직접 이 자리에서 서명하게 하세요.'}</span></div></div>`;
+    if (showPad) afterFns.push(initPad);
+    return `<div class="card"><h3>✍ ${st.ui.y}년 ${st.ui.m}월 수당 확인 서명 — ${h(p.name)}</h3><div style="font-size:14px;line-height:1.8">${sum}</div>${state}${pad}</div>`;
+  }
+  let padDirty = false;
+  function initPad() {
+    const c = document.getElementById('signPad'); if (!c) return;
+    const x = c.getContext('2d'); x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#111';
+    padDirty = false; let down = false, last = null;
+    const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+    c.addEventListener('pointerdown', e => { down = true; last = pos(e); c.setPointerCapture(e.pointerId); x.beginPath(); x.arc(last[0], last[1], 1.2, 0, 7); x.fillStyle = '#111'; x.fill(); padDirty = true; });
+    c.addEventListener('pointermove', e => { if (!down) return; const p = pos(e); x.beginPath(); x.moveTo(last[0], last[1]); x.lineTo(p[0], p[1]); x.stroke(); last = p; padDirty = true; });
+    const up = () => { down = false; }; c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up);
+  }
+  function trimmedSign() {
+    const c = document.getElementById('signPad'); const x = c.getContext('2d'); const d = x.getImageData(0, 0, c.width, c.height).data;
+    let x0 = c.width, y0 = c.height, x1 = 0, y1 = 0;
+    for (let yy = 0; yy < c.height; yy++) for (let xx = 0; xx < c.width; xx++) if (d[(yy * c.width + xx) * 4 + 3] > 10) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+    if (x1 <= x0 || y1 <= y0) return null;
+    const m = 6; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(c.width - 1, x1 + m); y1 = Math.min(c.height - 1, y1 + m);
+    let w = x1 - x0 + 1, hh = y1 - y0 + 1; const W = Math.max(w, hh * 3), H = Math.round(W / 3);
+    const o = document.createElement('canvas'); o.width = Math.min(W, 450); o.height = Math.round(o.width / 3);
+    const s = o.width / W; o.getContext('2d').drawImage(c, x0, y0, w, hh, (W - w) / 2 * s, Math.max(0, (H - hh) / 2) * s, w * s, hh * s);
+    return o.toDataURL('image/png');
+  }
+  async function putSign(pid, val, msg) {
+    const ym = `${st.ui.y}-${pad(st.ui.m)}`;
+    if (FireSync.S.linked && !FireSync.S.needLogin) {
+      try { await FireSync.signSet(pid, ym, val); } catch (e) { toast(e.message || String(e)); return; }
+      st.signs[pid] = Object.assign({}, st.signs[pid] || {}); if (val) st.signs[pid][ym] = val; else delete st.signs[pid][ym];
+      saveLocal(); toast(msg); render();
+    } else {
+      st.signs[pid] = Object.assign({}, st.signs[pid] || {}); if (val) st.signs[pid][ym] = val; else delete st.signs[pid][ym];
+      save(msg, `${msg}: ${person(pid)?.name} ${ym}`);
+    }
   }
   function personDetail(R, o) {
     const p = o.p;
@@ -1686,7 +1789,7 @@ table.t.inbox th{top:0;z-index:1}
         const s = x.s || {}; const sp = span[r + ',' + c];
         let v = x.v; if (typeof v === 'number' && s.num === '#,##0') v = v.toLocaleString('ko-KR');
         const style = [`text-align:${s.h || (typeof x.v === 'number' ? 'right' : 'left')}`, `vertical-align:${s.v === 'top' ? 'top' : 'middle'}`, s.b ? 'font-weight:700' : '', s.sz ? `font-size:${Math.round(s.sz * 1.15)}px` : '', s.color ? `color:#${s.color}` : '', s.fill ? `background:#${s.fill}` : ''].filter(Boolean).join(';');
-        html += `<td class="${s.border ? 'b' : ''}" style="${style}"${sp ? ` rowspan="${sp[0]}" colspan="${sp[1]}"` : ''}>${h(v == null ? '' : v)}</td>`;
+        html += `<td class="${s.border ? 'b' : ''}" style="${style}"${sp ? ` rowspan="${sp[0]}" colspan="${sp[1]}"` : ''}>${x.img ? `<img src="${x.img}" alt="서명" style="height:34px;max-width:120px;display:block;margin:auto">` : h(v == null ? '' : v)}</td>`;
       }
       html += '</tr>';
     });
@@ -1867,6 +1970,16 @@ table.t.inbox th{top:0;z-index:1}
       setTimeout(() => { const i = document.querySelector('#popLogin input[name="email"]'); if (i) i.focus(); }, 30);
       return;
     }
+    if (act === 'signClear') { const c = document.getElementById('signPad'); if (c) { c.getContext('2d').clearRect(0, 0, c.width, c.height); padDirty = false; } return; }
+    if (act === 'signRedo') { ui.signRedo = isStaff() ? me() : ui.only; render(); return; }
+    if (act === 'signSave') {
+      if (!padDirty) return toast('네모 안에 서명을 해 주세요.');
+      const img = trimmedSign(); if (!img) return toast('네모 안에 서명을 해 주세요.');
+      const R = compute(); const o = R.persons[ds.pid];
+      ui.signRedo = null; putSign(ds.pid, { img, at: new Date().toISOString(), sig: Reports.sigOf(o), total: o.pay ? o.pay.total : o.overtimeJ, by: FireSync.S.user || '이 PC' }, '서명을 저장했습니다');
+      return;
+    }
+    if (act === 'signDel') { if (confirm(`${person(ds.pid)?.name}의 ${st.ui.m}월 서명을 지울까요?`)) putSign(ds.pid, null, '서명을 지웠습니다'); return; }
     if (act === 'impCancel') { ui.imp = null; render(); return; }
     if (act === 'impApply') {
       const r = LeaveImport.apply(st, ui.imp.planned, nid); ui.imp = null;
@@ -1933,7 +2046,7 @@ table.t.inbox th{top:0;z-index:1}
       const rd = new FileReader(); rd.onload = () => { try { const o = JSON.parse(rd.result); if (!o.people || !o.leaves) throw 0; if (confirm('백업 파일 내용으로 바꿀까요? 지금 입력된 내용은 덮어씌워집니다.')) { st = o; load2(); save('백업을 불러왔습니다.'); } } catch (x) { toast('백업 파일 형식이 올바르지 않습니다.'); } }; rd.readAsText(el.files[0]);
     }
   });
-  function load2() { const keep = st; st = keep; ['people', 'leaves', 'changes', 'extras', 'holidays'].forEach(k => st[k] = st[k] || []); st.settings = st.settings || {}; st.settings.dutyDays = st.settings.dutyDays || {}; st.ui = st.ui || { y: 2026, m: 9 }; st.seq = st.seq || 5000; }
+  function load2() { const keep = st; st = keep; ['people', 'leaves', 'changes', 'extras', 'holidays'].forEach(k => st[k] = st[k] || []); st.settings = st.settings || {}; st.settings.dutyDays = st.settings.dutyDays || {}; st.ui = st.ui || { y: 2026, m: 9 }; st.seq = st.seq || 5000; st.signs = st.signs || {}; }
 
   function leaveSave() {
     const d = Object.assign(ui.leaveDraft || {}, readForm('#leaveForm'));
