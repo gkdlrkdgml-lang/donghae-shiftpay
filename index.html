@@ -407,6 +407,10 @@ table.t.inbox th{top:0;z-index:1}
         const holPay = holDays * 8;
         const overtime = Math.max(0, total - duty - holPay) + exH;
         Object.assign(out, { dayCnt, nightCnt, holDays, actual, duty, holPay, overtimeJ: overtime, nightH: night, leaveKinds: lv, leaveTotal: lvT });
+        // 조장 금액: 초과근무시간×시간외단가, 야간시간×야간단가, 휴일지급시간(휴일일수×8)×휴일단가
+        out.pay = { ot: floor10(overtime * (p.otRate || 0)), night: floor10(night * (p.nightRate || 0)), hol: floor10(holPay * (p.holRate || 0)) };
+        out.pay.total = out.pay.ot + out.pay.night + out.pay.hol;
+        out.hasRate = !!(Number(p.otRate) || Number(p.nightRate) || Number(p.holRate));
       }
       res.persons[p.id] = out;
     }
@@ -551,7 +555,7 @@ table.t.inbox th{top:0;z-index:1}
   function boxFill(rows, r0, r1_, c0, c1, s) { for (let r = r0; r <= r1_; r++) for (let c = c0; c <= c1; c++) if (rows[r][c] === undefined) rows[r][c] = cell('', s); }
 
   // 서명: 서명할 때의 수당과 지금 수당이 같아야 '유효'
-  function sigOf(o) { return o.p.role === '관제' ? `G|${r1(o.ot)}|${r1(o.night)}|${r1(o.hol)}|${o.pay.total}` : `J|${r1(o.overtimeJ)}|${r1(o.nightH)}|${o.holDays}`; }
+  function sigOf(o) { return o.p.role === '관제' ? `G|${r1(o.ot)}|${r1(o.night)}|${r1(o.hol)}|${o.pay.total}` : `J|${r1(o.overtimeJ)}|${r1(o.nightH)}|${o.holDays}${o.hasRate ? '|' + o.pay.total : ''}`; }
   const ymOf = R => `${R.y}-${String(R.m).padStart(2, '0')}`;
   function signOf(st, R, pid) {
     const s = st.signs && st.signs[pid] && st.signs[pid][ymOf(R)]; const o = R.persons[pid];
@@ -677,7 +681,7 @@ table.t.inbox th{top:0;z-index:1}
     for (const p of st.people) {
       const o = R.persons[p.id]; if (!o) continue;
       if (p.role === '관제') rows.push([cell('관제', S.c), cell(p.team + '조', S.c), cell(p.name, S.c), cell(o.workDays, S.c), cell(r1(o.total), S.n), cell(r1(o.weekOver), S.n), cell(r1(o.extraH), S.n), cell(r1(o.hol), S.n), cell(r1(o.night), S.n), cell(o.pay.ot, S.n), cell(o.pay.night, S.n), cell(o.pay.hol, S.n), cell(o.pay.total, S.n)]);
-      else rows.push([cell('조장', S.c), cell(p.team + '조', S.c), cell(p.name, S.c), cell(o.dayCnt + o.nightCnt, S.c), cell(r1(o.worked), S.n), cell(r1(o.weekOver), S.n), cell(r1(o.extraH), S.n), cell(r1(o.hol), S.n), cell(r1(o.night), S.n), cell('조장수당내역 참조', S.c), cell('', S.c), cell('', S.c), cell('', S.c)]);
+      else rows.push([cell('조장', S.c), cell(p.team + '조', S.c), cell(p.name, S.c), cell(o.dayCnt + o.nightCnt, S.c), cell(r1(o.worked), S.n), cell(r1(o.weekOver), S.n), cell(r1(o.extraH), S.n), cell(r1(o.hol), S.n), cell(r1(o.night), S.n), ...(o.hasRate ? [cell(o.pay.ot, S.n), cell(o.pay.night, S.n), cell(o.pay.hol, S.n), cell(o.pay.total, S.n)] : [cell('단가 미입력', S.c), cell('', S.c), cell('', S.c), cell('', S.c)])]);
     }
     return { name: '수당계산', rows, merges: ['A1:M1'], cols: [7, 6, 9, 9, 11, 11, 10, 10, 10, 12, 12, 12, 13], landscape: true };
   }
@@ -1686,20 +1690,25 @@ table.t.inbox th{top:0;z-index:1}
     if (isStaff()) { ui.sel = me(); if (!me()) return `<h2>내 수당</h2><div class="card"><div class="empty">이 아이디가 인원과 연결되어 있지 않습니다.<br>총괄 담당자에게 '인원·설정 → 로그인 아이디' 연결을 요청하세요.</div></div>`; }
     const G = st.people.filter(p => p.role === '관제' && R.persons[p.id] && mine(p)).sort((a, b) => (a.order || 99) - (b.order || 99));
     const J = st.people.filter(p => p.role === '조장' && R.persons[p.id] && mine(p));
-    const tot = G.reduce((a, p) => { const o = R.persons[p.id]; a.ot += o.pay.ot; a.n += o.pay.night; a.h += o.pay.hol; a.t += o.pay.total; return a; }, { ot: 0, n: 0, h: 0, t: 0 });
+    const sumOf = L => L.reduce((a, p) => { const o = R.persons[p.id]; a.ot += o.pay.ot; a.n += o.pay.night; a.h += o.pay.hol; a.t += o.pay.total; return a; }, { ot: 0, n: 0, h: 0, t: 0 });
+    const tot = sumOf(G), totJ = sumOf(J), all = { ot: tot.ot + totJ.ot, n: tot.n + totJ.n, h: tot.h + totJ.h, t: tot.t + totJ.t };
     const sel = ui.sel && R.persons[ui.sel] ? R.persons[ui.sel] : null;
     const pick = isStaff() ? '' : `<div class="row noprint" style="margin-bottom:14px;align-items:center"><div class="fld" style="min-width:220px"><label>보기</label><select id="onlySel"><option value="">전체 보기</option><optgroup label="관제요원">${st.people.filter(p => p.role === '관제').sort((a, b) => (a.order || 99) - (b.order || 99)).map(p => `<option value="${p.id}" ${ui.only === p.id ? 'selected' : ''}>${h(p.name)}</option>`).join('')}</optgroup><optgroup label="조장">${st.people.filter(p => p.role === '조장').map(p => `<option value="${p.id}" ${ui.only === p.id ? 'selected' : ''}>${h(p.name)}</option>`).join('')}</optgroup></select></div>${ui.only ? '<button class="btn" data-act="onlyAll" style="align-self:flex-end">전체 보기로 돌아가기</button>' : ''}</div>`;
     return `<h2>수당 결과</h2><p class="sub">${st.ui.y}년 ${st.ui.m}월 · 복무규정 근무일수 ${R.dutyDays}일 · ${ui.only ? `<b>${h(person(ui.only)?.name)}</b> 한 사람만 보는 중` : '이름을 고르면 그 사람 것만 볼 수 있습니다.'}</p>${pick}
     ${alertBox(R)}
-    ${isStaff() || ui.only ? '' : `<div class="kpis"><div class="kpi"><span>관제요원 지급 합계</span><b>${won(tot.t)}원</b></div><div class="kpi"><span>시간외수당</span><b>${won(tot.ot)}원</b></div><div class="kpi"><span>야간수당</span><b>${won(tot.n)}원</b></div><div class="kpi"><span>휴일수당</span><b>${won(tot.h)}원</b></div></div>`}
+    ${isStaff() || ui.only ? '' : `<div class="kpis"><div class="kpi"><span>전체 지급 합계</span><b>${won(all.t)}원</b><span>관제 ${won(tot.t)} · 조장 ${won(totJ.t)}</span></div><div class="kpi"><span>시간외수당</span><b>${won(all.ot)}원</b></div><div class="kpi"><span>야간수당</span><b>${won(all.n)}원</b></div><div class="kpi"><span>휴일수당</span><b>${won(all.h)}원</b></div></div>`}
     ${(isStaff() || ui.only) && R.persons[isStaff() ? me() : ui.only] ? signCard(R, isStaff() ? me() : ui.only) : ''}
     <div class="split"><div>
     ${G.length ? '' : '<!--'}<div class="card"><h3>관제요원</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">근무일수</th><th class="num">총근무</th><th class="num">주초과</th><th class="num">추가</th><th class="num">야간</th><th class="num">휴일</th><th class="num">시간외수당</th><th class="num">야간수당</th><th class="num">휴일수당</th><th class="num">합계</th><th class="c">서명</th></tr></thead><tbody>
     ${G.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.workDays}</td><td class="num">${r1(o.total)}</td><td class="num">${r1(o.weekOver)}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num">${r1(o.night)}</td><td class="num">${r1(o.hol)}</td><td class="num">${won(o.pay.ot)}</td><td class="num">${won(o.pay.night)}</td><td class="num">${won(o.pay.hol)}</td><td class="num"><b>${won(o.pay.total)}</b></td><td class="c">${signTag(R, p.id)}</td></tr>`; }).join('')}
     ${isStaff() || ui.only ? '' : `<tr class="total"><td>합계</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="num">${won(tot.ot)}</td><td class="num">${won(tot.n)}</td><td class="num">${won(tot.h)}</td><td class="num">${won(tot.t)}</td><td class="c hint">${G.filter(p => Reports.signOf(st, R, p.id).state === 'ok').length}/${G.length}</td></tr>`}</tbody></table></div>${G.length ? '' : '-->'}
-    ${J.length ? '' : '<!--'}<div class="card"><h3>조장 (청원경찰)</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">주간</th><th class="num">야간</th><th class="num">휴일일수</th><th class="num">실제근무①</th><th class="num">복무규정②</th><th class="num">휴일지급③</th><th class="num">미체크</th><th class="num">초과근무</th><th class="num">야간시간</th><th class="num">휴가 제외</th><th class="c">서명</th></tr></thead><tbody>
-    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.dayCnt}</td><td class="num">${o.nightCnt}</td><td class="num">${o.holDays}</td><td class="num">${r1(o.actual)}</td><td class="num">${r1(o.duty)}</td><td class="num">${o.holPay}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num"><b>${r1(o.overtimeJ)}</b></td><td class="num">${r1(o.nightH)}</td><td class="num">${r1(o.leaveTotal) || ''}</td><td class="c">${signTag(R, p.id)}</td></tr>`; }).join('')}
-    </tbody></table><p class="hint" style="margin:10px 0 0">초과근무 = max(0, ①−②−③) + 미체크 초과. ② = 복무규정 근무일수×8 − 휴가시간.</p></div>${J.length ? '' : '-->'}
+    ${J.length ? '' : '<!--'}<div class="card"><h3>조장 (청원경찰)</h3><table class="t"><thead><tr><th>이름</th><th class="c">조</th><th class="num">주간</th><th class="num">야간</th><th class="num">휴일일수</th><th class="num">실제근무①</th><th class="num">복무규정②</th><th class="num">휴일지급③</th><th class="num">미체크</th><th class="num">초과근무</th><th class="num">야간시간</th><th class="num">휴가 제외</th></tr></thead><tbody>
+    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="c">${p.team}</td><td class="num">${o.dayCnt}</td><td class="num">${o.nightCnt}</td><td class="num">${o.holDays}</td><td class="num">${r1(o.actual)}</td><td class="num">${r1(o.duty)}</td><td class="num">${o.holPay}</td><td class="num">${r1(o.extraH) || ''}</td><td class="num"><b>${r1(o.overtimeJ)}</b></td><td class="num">${r1(o.nightH)}</td><td class="num">${r1(o.leaveTotal) || ''}</td></tr>`; }).join('')}
+    </tbody></table>
+    <h3 style="margin:18px 0 8px;font-size:14px">조장 수당 금액</h3><table class="t"><thead><tr><th>이름</th><th class="num">초과근무</th><th class="num">시간외수당</th><th class="num">야간시간</th><th class="num">야간수당</th><th class="num">휴일지급</th><th class="num">휴일수당</th><th class="num">합계</th><th class="c">서명</th></tr></thead><tbody>
+    ${J.map(p => { const o = R.persons[p.id]; return `<tr data-sel="${p.id}" style="cursor:pointer" class="${ui.sel === p.id ? 'sel' : ''}"><td><b>${h(p.name)}</b></td><td class="num">${r1(o.overtimeJ)}</td>${o.hasRate ? `<td class="num">${won(o.pay.ot)}</td><td class="num">${r1(o.nightH)}</td><td class="num">${won(o.pay.night)}</td><td class="num">${o.holPay}</td><td class="num">${won(o.pay.hol)}</td><td class="num"><b>${won(o.pay.total)}</b></td>` : `<td class="c hint" colspan="6">단가 미입력 (인원·설정에서 입력)</td>`}<td class="c">${signTag(R, p.id)}</td></tr>`; }).join('')}
+    ${isStaff() || ui.only || J.length < 2 ? '' : `<tr class="total"><td>합계</td><td></td><td class="num">${won(totJ.ot)}</td><td></td><td class="num">${won(totJ.n)}</td><td></td><td class="num">${won(totJ.h)}</td><td class="num">${won(totJ.t)}</td><td class="c hint">${J.filter(p => Reports.signOf(st, R, p.id).state === 'ok').length}/${J.length}</td></tr>`}
+</tbody></table><p class="hint" style="margin:10px 0 0">초과근무 = max(0, ①−②−③) + 미체크 초과. ② = 복무규정 근무일수×8 − 휴가시간. 금액 = 초과근무×시간외단가, 야간시간×야간단가, 휴일지급시간③×휴일단가 (10원 미만 버림).</p></div>${J.length ? '' : '-->'}
     </div><div class="drawer">${sel ? personDetail(R, sel) : '<div class="card"><div class="empty">왼쪽 표에서 사람을 고르면<br>날짜별 근무시간·야간·휴일·휴가 차감 내역이 나옵니다.</div></div>'}</div></div>`;
   }
   function signTag(R, pid) {
@@ -1709,7 +1718,7 @@ table.t.inbox th{top:0;z-index:1}
   function signCard(R, pid) {
     const o = R.persons[pid], p = o.p, g = Reports.signOf(st, R, pid);
     const sum = p.role === '관제' ? `시간외 <b>${r1(o.ot)}시간 ${won(o.pay.ot)}원</b> · 야간 <b>${r1(o.night)}시간 ${won(o.pay.night)}원</b> · 휴일 <b>${r1(o.hol)}시간 ${won(o.pay.hol)}원</b> · 합계 <b style="font-size:16px">${won(o.pay.total)}원</b>`
-      : `초과근무 <b>${r1(o.overtimeJ)}시간</b> · 야간근무 <b>${r1(o.nightH)}시간</b> · 휴일근무 <b>${o.holDays}일</b>`;
+      : `초과근무 <b>${r1(o.overtimeJ)}시간${o.hasRate ? ' ' + won(o.pay.ot) + '원' : ''}</b> · 야간근무 <b>${r1(o.nightH)}시간${o.hasRate ? ' ' + won(o.pay.night) + '원' : ''}</b> · 휴일근무 <b>${o.holDays}일(${o.holPay}시간)${o.hasRate ? ' ' + won(o.pay.hol) + '원' : ''}</b>${o.hasRate ? ` · 합계 <b style="font-size:16px">${won(o.pay.total)}원</b>` : ''}`;
     const when = g.s ? new Date(g.s.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
     const state = g.state === 'ok' ? `<div class="preview" style="background:var(--acc-soft);color:#0b5a53"><b>✓ ${when} 서명 완료</b> — 출력 양식의 지급명세서 비고란에 이 서명이 들어갑니다.</div>`
       : g.state === 'stale' ? `<div class="preview warn"><b>서명한 뒤(${when}) 수당이 바뀌었습니다.</b> 바뀐 내용을 확인하고 다시 서명해 주세요.</div>` : '';
